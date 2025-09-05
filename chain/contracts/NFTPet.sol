@@ -8,10 +8,10 @@ contract NFTPet is ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
-    uint constant MAX_HEALTH = 100;
-    uint constant HEALTH_DECAY_PER_DAY = 10;
-    uint constant FEED_AMOUNT = 30;
-    uint constant EVOLUTION_DAYS = 7;
+    uint constant MAX_HEALTH = 100;           // max здоровье 
+    uint constant HEALTH_DECAY_PER_DAY = 10;  //питомец теряет 10 единиц здоровья за день если не кормить
+    uint constant FEED_AMOUNT = 30;           //Кормление - +30HEALTH
+    uint constant EVOLUTION_DAYS = 7;         //эволюционировать через 7 дней
     uint constant SECONDS_PER_DAY = 86400;
 
     enum PetState { Active, Evolved, Dead }
@@ -29,5 +29,20 @@ contract NFTPet is ERC721URIStorage {
 
     constructor() ERC721("NFTPets", "PET") {}
 
+    function mintPet(string memory name, string memory tokenURI) public {
+        _tokenIds.increment();
+        uint256 newPetId = _tokenIds.current();
+        _safeMint(msg.sender, newPetId);    // Создаём NFT и передаём владельцу
+        _setTokenURI(newPetId, tokenURI);   // Привязываем метаданные (ссылку)
+
+        pets[newPetId] = Pet({
+            name: name,
+            health: MAX_HEALTH,
+            lastFed: block.timestamp,
+            createdAt: block.timestamp,
+            evolveStage: 1,
+            state: PetState.Active
+        });
+    }
 
 }
