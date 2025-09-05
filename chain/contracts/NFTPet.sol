@@ -17,12 +17,12 @@ contract NFTPet is ERC721URIStorage {
     enum PetState { Active, Evolved, Dead }
 
     struct Pet {
-        string name;       //имя
-        uint health;       //текущее здоровье;
-        uint lastFed;      //когда последний раз кормили
-        uint createdAt;    //дата создания
-        uint evolveStage;  //стадия эволюции
-        PetState state;    //активный, эволюционировал или мертвый
+        string name;                    //имя
+        uint health;                    //текущее здоровье;
+        uint lastFed;                    //когда последний раз кормили
+        uint createdAt;                  //дата создания
+        uint evolveStage;                //стадия эволюции
+        PetState state;                  //активный, эволюционировал или мертвый
     }
 
     mapping(uint => Pet) public pets;
