@@ -15,8 +15,8 @@ contract NFTPet is ERC721URIStorage {
     uint constant SECONDS_PER_DAY = 86400;
 
 
-    uint public constant PET_PRICE = 0.01 ether;
-    uint public constant BONUS_FEED_PRICE = 0.005 ether;
+    uint public  PET_PRICE = 0.01 ether;
+    uint public  BONUS_FEED_PRICE = 0.005 ether;
 
     enum PetState { Active, Dead }
     uint[] public experienceThresholds = [0, 20, 70, 150, 250, 370, 500, 650, 730, 1000];
@@ -38,8 +38,9 @@ contract NFTPet is ERC721URIStorage {
     event EvolutionStage(uint tokenId, uint age);
     event PetFed(uint tokenId, uint newHealth);
     event PetDied(uint tokenId);
+    event PetCreated(uint tokenId, address owner);
 
-    modifier onlyPetOwner(){
+    modifier onlyPetOwner(uint tokenId) {
         require(ownerOf(tokenId) ==  msg.sender, "Not your pet");
         _;
     }
@@ -75,6 +76,8 @@ contract NFTPet is ERC721URIStorage {
             require(msg.value >= PET_PRICE, "Not enough ETH to buy pet");
             mintPet(name, tokenURI);
             payable(owner()).transfer(msg.value);
+
+            emit PetCreated(newPetId, msg.sender);
         }
     }
 
@@ -115,7 +118,8 @@ contract NFTPet is ERC721URIStorage {
     }
 
 
-    function feedPet(uint tokenId) public onlyPetOwner(){
+    function feedPet(uint tokenId) public onlyPetOwner(tokenId){
+        require(block.timestamp - pet.lastFed >= 300, "Too early to feed again");
         Pet storage pet = pets[tokenId];
         require(pet.state == PetState.Active, "Pet is not active");
 
@@ -146,7 +150,8 @@ contract NFTPet is ERC721URIStorage {
 
     }
 
-    function feedPetBonus(uint tokenId) public payable  onlyPetOwner() {
+    function feedPetBonus(uint tokenId) public payable  onlyPetOwner(tokenId) {
+        require(block.timestamp - pet.lastFed >= 3600, "Too early to feed again");
         require(msg.value >= BONUS_FEED_PRICE, "Not enough ETH for bonus feed");
 
         Pet storage pet = pets[tokenId];
@@ -182,7 +187,7 @@ contract NFTPet is ERC721URIStorage {
 
     }
 
-    function updateTokenURI(uint tokenId, string memory tokenURI) public onlyPetOwner{
+    function updateTokenURI(uint tokenId, string memory tokenURI) public onlyPetOwner(tokenId){
         _setTokenURI(tokenId, tokenURI);
     }
 
@@ -211,11 +216,12 @@ contract NFTPet is ERC721URIStorage {
         return (pet.name, currentHealth, pet.lastFed, pet.age, pet.state);
     }
 
-    function setPET_PRICE(uint  _PET_PRICE) public{
-        PET_PRICE = PET_PRICE;
+    function setPET_PRICE(uint _price) public onlyOwner {
+        PET_PRICE = _price;
     }
-      function setBONUS_FEED_PRICE(uint  _BONUS_FEED_PRICE) public{
-        BONUS_FEED_PRICE = BONUS_FEED_PRICE;
+
+      function setBONUS_FEED_PRICE(uint  _price) public{
+        BONUS_FEED_PRICE = _price;
     }
 
 
