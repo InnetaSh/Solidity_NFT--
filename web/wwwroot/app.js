@@ -7,6 +7,8 @@
     const choisePetImageBtn_1 = document.getElementById('choisePetImageBtn_1');  //кнопка купить питомца #1
     const choisePetImageBtn_2 = document.getElementById('choisePetImageBtn_2');  //кнопка купить питомца #1
     const choisePetImageBtn_3 = document.getElementById('choisePetImageBtn_3');  //кнопка купить питомца #1
+    const feedPetBtn = document.getElementById('feetPetBtn');  //кнопка кормить питомца
+
     const inputPetName = document.getElementById('inputPetName');
 
 
@@ -17,6 +19,8 @@
     choisePetImageBtn_2.addEventListener('click', 'click', () => selectPetImage(1);
     choisePetImageBtn_3.addEventListener('click', 'click', () => selectPetImage(2));
 
+    feedPetBtn.addEventListener('click', feedPet);
+
 
 
     let provider, signer, contract, cfg;
@@ -26,6 +30,9 @@
     const defaultImage = "https://gateway.pinata.cloud/ipfs/QmDefaultImage123";  // ссылка на изображение по умолчанию (для 1 питомца ) - изменить на своё!
     let chosenImage = null;
     let selectedTokenId = null;
+    let tokenIds = [];
+    let health;
+    let experience;
 
     const petImagesAge_0 = [
         "https://gateway.pinata.cloud/ipfs/QmCatImage123...",  // ссылки на изображения питомцев - изменить на свои!
@@ -61,6 +68,11 @@
             await provider.send("eth_requestAccounts", []);
             signer = await provider.getSigner();
             contract = new ethers.Contract(cfg.address, cfg.abi, signer);
+
+            tokenIds = await contract.getMyPets();
+            if (tokenIds.length != 0) {
+                await loadMyPets();
+            }
             
         } catch (e) {
             alert("Error: " + e.message);
@@ -183,7 +195,7 @@
     }
 
     async function loadMyPets() {
-        const tokenIds = await contract.getMyPets();
+        tokenIds = await contract.getMyPets();
         const container = document.getElementById("petContainer");  //на фронте сделать контейнер с таким id для отображения питомцев
         container.innerHTML = "";
 
@@ -213,7 +225,19 @@
     }
 
 
+    async function feedPet(selectedTokenId) {
+        try {
+            const tx = await contract.feedPet(selectedTokenId);
+            await tx.wait();
 
+            health = await contract.getPetHealth(selectedTokenId);
+            experience = await contract.getPetExperience(selectedTokenId);
+            alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}`);
+        }
+        catch (e) {
+            alert("Ошибка при кормлении питомца: " + e.message);
+        }
+    }
 
     window.onload = connect;
     await loadConfig();

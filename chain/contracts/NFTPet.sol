@@ -259,6 +259,10 @@ contract NFTPet is ERC721URIStorage, Ownable {
         return pets[tokenId].age;
     }
 
+    function getPetExperience(uint tokenId) public view returns (uint) {
+        return pets[tokenId].experience;
+    }
+
     function exists(uint tokenId) public view returns(bool) {
         return _exists(tokenId);
     }
