@@ -3,8 +3,9 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract NFTPet is ERC721URIStorage {
+contract NFTPet is ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
 
@@ -38,14 +39,16 @@ contract NFTPet is ERC721URIStorage {
     event EvolutionStage(uint tokenId, uint age);
     event PetFed(uint tokenId, uint newHealth);
     event PetDied(uint tokenId);
-    event PetCreated(uint tokenId, address owner);
+    event PetCreated(uint tokenId, address petOwner);
 
     modifier onlyPetOwner(uint tokenId) {
         require(ownerOf(tokenId) ==  msg.sender, "Not your pet");
         _;
     }
 
-    constructor() ERC721("NFTPets", "PET") {}
+    
+    constructor() ERC721("NFTPets", "PET") {
+    }
 
     function mintPet(string memory name, string memory tokenURI) public {
         _tokenIds.increment();
@@ -72,10 +75,12 @@ contract NFTPet is ERC721URIStorage {
 
         if (ownedPetsCount == 0) {
             mintPet(name, tokenURI);
+            uint256 newPetId = _tokenIds.current();
+            emit PetCreated(newPetId, msg.sender);
         } else {
             require(msg.value >= PET_PRICE, "Not enough ETH to buy pet");
             mintPet(name, tokenURI);
-            payable(owner()).transfer(msg.value);
+            uint256 newPetId = _tokenIds.current();
 
             emit PetCreated(newPetId, msg.sender);
         }
@@ -90,8 +95,8 @@ contract NFTPet is ERC721URIStorage {
         userPets[to].push(tokenId);
     }
 
-    function _removePetFromUser(address owner, uint256 tokenId) internal {
-        uint256[] storage petsArray = userPets[owner];
+    function _removePetFromUser(address petOwner, uint256 tokenId) internal {
+        uint256[] storage petsArray = userPets[petOwner];
         for (uint i = 0; i < petsArray.length; i++) {
             if (petsArray[i] == tokenId) {
                 petsArray[i] = petsArray[petsArray.length - 1];
@@ -110,17 +115,18 @@ contract NFTPet is ERC721URIStorage {
         uint timePassed = block.timestamp - pet.lastFed;
         uint decay = (timePassed / SECONDS_PER_DAY) * HEALTH_DECAY_PER_DAY;
 
-        if (decay >= pet.health) {
+        if (decay >=  pets[tokenId].health) {
             return 0;
         } else {
-            return pet.health - decay;
+            return  pets[tokenId].health - decay;
         }
     }
 
 
     function feedPet(uint tokenId) public onlyPetOwner(tokenId){
+        Pet memory pet = pets[tokenId];
+
         require(block.timestamp - pet.lastFed >= 300, "Too early to feed again");
-        Pet storage pet = pets[tokenId];
         require(pet.state == PetState.Active, "Pet is not active");
 
         uint currentHealth = getHealth(tokenId);
@@ -151,10 +157,10 @@ contract NFTPet is ERC721URIStorage {
     }
 
     function feedPetBonus(uint tokenId) public payable  onlyPetOwner(tokenId) {
+        Pet memory pet = pets[tokenId];
+
         require(block.timestamp - pet.lastFed >= 3600, "Too early to feed again");
         require(msg.value >= BONUS_FEED_PRICE, "Not enough ETH for bonus feed");
-
-        Pet storage pet = pets[tokenId];
         require(pet.state == PetState.Active, "Pet is not active");
 
         pet.health = MAX_HEALTH;
@@ -192,7 +198,7 @@ contract NFTPet is ERC721URIStorage {
     }
 
 
-    function burnDeadPet(uint tokenId) public onlyPetOwner(){
+    function burnDeadPet(uint tokenId) public onlyPetOwner(tokenId){
         require(pets[tokenId].state == PetState.Dead, "Pet is not dead");
 
         _burn(tokenId);
@@ -216,7 +222,7 @@ contract NFTPet is ERC721URIStorage {
         return (pet.name, currentHealth, pet.lastFed, pet.age, pet.state);
     }
 
-    function setPET_PRICE(uint _price) public onlyOwner {
+    function setPET_PRICE(uint _price) public {
         PET_PRICE = _price;
     }
 
@@ -230,7 +236,7 @@ contract NFTPet is ERC721URIStorage {
     }
 
 
-    function getPetState(uint tokenId) public view  returns(PetState memory){
+    function getPetState(uint tokenId) public view  returns(PetState){
         return pets[tokenId].state;
     }
        
@@ -253,6 +259,14 @@ contract NFTPet is ERC721URIStorage {
 
     function getMyPets() public view returns (uint256[] memory) {
         return userPets[msg.sender];
+    }
+
+    function getContractBalance() public view returns (uint) {
+        return address(this).balance;
+    }
+
+    function withdraw() public onlyOwner {
+        payable(owner()).transfer(address(this).balance);
     }
 
 }
