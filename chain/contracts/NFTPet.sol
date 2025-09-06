@@ -230,6 +230,20 @@ contract NFTPet is ERC721URIStorage, Ownable {
         BONUS_FEED_PRICE = _price;
     }
 
+     function addExperienceThreshold(uint newThreshold) public onlyOwner {
+        require(
+            experienceThresholds.length == 0 || 
+            newThreshold > experienceThresholds[experienceThresholds.length - 1],
+            "New threshold must be greater than last"
+        );
+        experienceThresholds.push(newThreshold);
+    }
+
+
+    function withdraw() public onlyOwner {
+        payable(owner()).transfer(address(this).balance);
+    }
+
 
     function getName(uint tokenId) public view  returns(string memory){
         return pets[tokenId].name;
@@ -263,10 +277,6 @@ contract NFTPet is ERC721URIStorage, Ownable {
 
     function getContractBalance() public view returns (uint) {
         return address(this).balance;
-    }
-
-    function withdraw() public onlyOwner {
-        payable(owner()).transfer(address(this).balance);
     }
 
 }
