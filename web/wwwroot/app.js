@@ -1,6 +1,11 @@
 ﻿// JavaScript source code
 (async function () {
 
+    const nameEl = document.getElementById("petName");
+    const healthEl = document.getElementById("petHealth");
+    const experienceEl = document.getElementById("petExperience");
+    const ageEl = document.getElementById("petAge");
+    const statusEl = document.getElementById("petStatus");
 
     const getPetBtn = document.getElementById('getPetBtn');  //кнопка получить питомца при первом заходе на сайт
     const byePetBtn = document.getElementById('byePetBtn');  //кнопка купить питомца
@@ -8,6 +13,7 @@
     const choisePetImageBtn_2 = document.getElementById('choisePetImageBtn_2');  //кнопка купить питомца #1
     const choisePetImageBtn_3 = document.getElementById('choisePetImageBtn_3');  //кнопка купить питомца #1
     const feedPetBtn = document.getElementById('feetPetBtn');  //кнопка кормить питомца
+    const feedPetBonusBtn = document.getElementById('feedPetBonusBtn');  //кнопка кормить питомца бонусом
 
     const inputPetName = document.getElementById('inputPetName');
 
@@ -15,11 +21,12 @@
 
     getPetBtn.addEventListener('click', getPet);
     byePetBtn.addEventListener('click', byePet);
-    choisePetImageBtn_1.addEventListener('click', 'click', () => selectPetImage(0));
-    choisePetImageBtn_2.addEventListener('click', 'click', () => selectPetImage(1);
-    choisePetImageBtn_3.addEventListener('click', 'click', () => selectPetImage(2));
+    choisePetImageBtn_1.addEventListener('click', () => selectPetImage(0));
+    choisePetImageBtn_2.addEventListener('click', () => selectPetImage(1);
+    choisePetImageBtn_3.addEventListener('click', () => selectPetImage(2));
 
     feedPetBtn.addEventListener('click', feedPet);
+    feedPetBonusBtn.addEventListener('click', feedPetBonus);
 
 
 
@@ -31,8 +38,10 @@
     let chosenImage = null;
     let selectedTokenId = null;
     let tokenIds = [];
-    let health;
-    let experience;
+
+    let name, health, experience, age, status;
+    let petPrice = "0";                                             // цена питомца !
+    let petBonusFeedPrice = "0";                                    // цена бонусного кормления питомца !
 
     const petImagesAge_0 = [
         "https://gateway.pinata.cloud/ipfs/QmCatImage123...",  // ссылки на изображения питомцев - изменить на свои!
@@ -74,6 +83,7 @@
                 await loadMyPets();
             }
             
+            
         } catch (e) {
             alert("Error: " + e.message);
         } finally {
@@ -85,8 +95,8 @@
     async function getPet() {                                                    // функция - получение питомца
         const petName = inputPetName.value.trim();
 
-        if (!petName || !chosenImage) {
-            alert("Введите имя и выберите изображение питомца.");
+        if (!petName) {
+            alert("Введите имя питомца.");
             return;
         }
 
@@ -220,12 +230,18 @@
 
     function selectPet(tokenId) {
         selectedTokenId = tokenId;
+        [name, health, experience, age, status] = await getPetStatus(tokenId);
         alert("Выбран питомец с tokenId: " + tokenId);
+
         // можно отобразить его подробности, включить кнопку "Покормить", и т.д.
     }
 
 
-    async function feedPet(selectedTokenId) {
+    async function feedPet() {
+        if (!selectedTokenId) {
+            alert("Сначала выберите питомца.");
+            return;
+        }
         try {
             const tx = await contract.feedPet(selectedTokenId);
             await tx.wait();
@@ -239,6 +255,72 @@
         }
     }
 
-    window.onload = connect;
-    await loadConfig();
+    async function feedPetBonus() {
+        if (!selectedTokenId) {
+            alert("Сначала выберите питомца.");
+            return;
+        }
+
+        try {
+            const bonusPrice = await contract.getBONUS_FEED_PRICE();
+
+            const tx = await contract.feedPetBonus(selectedTokenId, {
+                value: bonusPrice
+            });
+
+            await tx.wait();
+
+            const health = await contract.getHealth(selectedTokenId);
+            const experience = await contract.getPetExperience(selectedTokenId); // убедись, что эта функция есть в контракте
+
+            alert(`🐾 Вы покормили питомца бонусом!\nЗдоровье: ${health}\nОпыт: ${experience}`);
+        } catch (e) {
+            alert("Ошибка при бонусном кормлении: " + e.message);
+        }
+    }
+
+
+
+    async function updatePetStats() {                       // функция - обновление состояния питомца (здоровье и опыт) каждые 3 минуты
+        if (!selectedTokenId) return;
+
+        try {
+            await contract.decayExperience(selectedTokenId);
+            
+            const health = await contract.getHealth(selectedTokenId);
+            const experience = await contract.getPetExperience(selectedTokenId);
+
+            console.log(`🔁 Обновление данных: здоровье: ${health}, опыт: ${experience}`);
+
+            
+
+            if (healthEl) healthEl.textContent = `Здоровье: ${health}`;
+            if (experienceEl) experienceEl.textContent = `Опыт: ${experience}`;
+        } catch (e) {
+            console.error("Ошибка при обновлении состояния питомца:", e.message);
+        }
+    }
+
+
+
+
+
+
+    window.onload = async function () {
+        await connect();
+        await loadConfig();
+
+        petPrice = await getPET_PRICE();
+        petBonusFeedPrice = await getBONUS_FEED_PRICE();
+
+        tokenIds = await contract.getMyPets();
+        if (tokenIds.length > 0) {
+            selectedTokenId = tokenIds[0];  
+            await loadMyPets();
+            await updatePetStats();        
+        }
+        
+        setInterval(updatePetStats, 3 * 60 * 1000);
+    };
+ 
 })();
