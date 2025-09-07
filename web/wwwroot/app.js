@@ -19,7 +19,7 @@
     const choisePetImageBtn_2 = document.getElementById('choisePetImageBtn_2');  //кнопка купить питомца #1
     const choisePetImageBtn_3 = document.getElementById('choisePetImageBtn_3');  //кнопка купить питомца #1
 
-    const feedPetBtn = document.getElementById('feetPetBtn');  //кнопка кормить питомца
+    const feedPetBtn = document.getElementById('feedPetBtn');  //кнопка кормить питомца
     const feedPetBonusBtn = document.getElementById('feedPetBonusBtn');  //кнопка кормить питомца бонусом
     const sellPetBtn = document.getElementById('sellPetBtn');  //кнопка продать питомца
     const burnDeadPetBtn = document.getElementById('burnDeadPetBtn');  //кнопка сжечь мертвого питомца
@@ -55,6 +55,8 @@
     let name, health, lastFed, experience, age, status;
     let petPrice = "0";                                             // цена питомца !
     let petBonusFeedPrice = "0";                                    // цена бонусного кормления питомца !
+
+    let currentlySelectedCard = null;
 
     const petImagesAge_0 = [
         "https://gateway.pinata.cloud/ipfs/QmCatImage123...",  // ссылки на изображения питомцев - изменить на свои!
@@ -100,7 +102,9 @@
 
             if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${ethers.formatEther(petPrice)} ETH`;
             if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
-    
+
+
+            subscribeEvents();
             console.log("Connected to contract at:", cfg.address);
             
         } catch (e) {
@@ -110,6 +114,38 @@
         }
     }
 
+    function subscribeEvents() {
+        if (!contract) {
+            console.error("Contract is not initialized");
+            return;
+        }
+        contract.on("PetCreated", (tokenId, owner, event) => {
+            console.log(`PetCreated: ID ${tokenId.toString()}`);
+            loadMyPets();
+        });
+
+        contract.on("PetFed", (tokenId, newHealth, newExperience, event) => {
+            if (selectedTokenId && selectedTokenId === tokenId.toString()) {
+                updatePetStats();
+            }
+        });
+
+        contract.on("PetSold", (tokenId, from, to, event) => {
+            if (selectedTokenId && selectedTokenId === tokenId.toString()) {
+                alert(`Питомец ${tokenId.toString()} был продан.`);
+                selectedTokenId = null;
+                loadMyPets();
+            }
+        });
+
+        contract.on("PetBurned", (tokenId, event) => {
+            if (selectedTokenId && selectedTokenId === tokenId.toString()) {
+                alert(`Питомец ${tokenId.toString()} был сожжен.`);
+                selectedTokenId = null;
+                loadMyPets();
+            }
+        });
+    }
 
     async function getPet() {                                                    // функция - получение питомца
         const petName = inputPetName.value.trim();
@@ -285,7 +321,7 @@
                 card.innerHTML = `
                     <img src="${metadata.image}" alt="${metadata.name}" />
                     <h3>${metadata.name}</h3>
-                    <button onclick="selectPet(${tokenId})">Выбрать</button>
+                    <button class="select-pet-btn" onclick="selectPet(${tokenId})">Выбрать</button>
                 `;
 
                 card.querySelector(".select-pet-btn").addEventListener("click", async () => {
@@ -367,7 +403,7 @@
             const tx = await contract.feedPet(selectedTokenId);
             await tx.wait();
 
-            health = await contract.getPetHealth(selectedTokenId);
+            health = await contract.getHealth(selectedTokenId);
             experience = await contract.getPetExperience(selectedTokenId);
             alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}`);
         }
@@ -475,6 +511,14 @@
         } catch (e) {
             alert("Ошибка при удалении: " + e.message);
         }
+    }
+
+    async function getPET_PRICE() {
+        return await contract.PET_PRICE();
+    }
+
+    async function getBONUS_FEED_PRICE() {
+        return await contract.BONUS_FEED_PRICE();
     }
 
 
