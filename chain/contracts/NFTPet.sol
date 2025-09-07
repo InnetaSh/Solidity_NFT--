@@ -124,7 +124,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
 
 
     function feedPet(uint tokenId) public onlyPetOwner(tokenId){
-        Pet memory pet = pets[tokenId];
+        Pet storage  pet = pets[tokenId];
 
         require(block.timestamp - pet.lastFed >= 300, "Too early to feed again");
         require(pet.state == PetState.Active, "Pet is not active");
@@ -157,7 +157,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
     }
 
     function feedPetBonus(uint tokenId) public payable  onlyPetOwner(tokenId) {
-        Pet memory pet = pets[tokenId];
+        Pet storage  pet = pets[tokenId];
 
         require(block.timestamp - pet.lastFed >= 3600, "Too early to feed again");
         require(msg.value >= BONUS_FEED_PRICE, "Not enough ETH for bonus feed");
@@ -209,6 +209,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
         string memory name,
         uint health,
         uint lastFed,
+        uint experience,
         uint age,
         PetState state
     ) {
@@ -216,17 +217,17 @@ contract NFTPet is ERC721URIStorage, Ownable {
         uint currentHealth = getHealth(tokenId);
 
         if (currentHealth == 0 && pet.state != PetState.Dead) {
-            return (pet.name, 0, pet.lastFed, pet.age, PetState.Dead);
+            return (pet.name, 0, pet.lastFed, pet.experience, pet.age, PetState.Dead);
         }
 
-        return (pet.name, currentHealth, pet.lastFed, pet.age, pet.state);
+        return (pet.name, currentHealth, pet.lastFed, pet.experience, pet.age, pet.state);
     }
 
-    function setPET_PRICE(uint _price) public {
+    function setPET_PRICE(uint _price) public onlyOwner {
         PET_PRICE = _price;
     }
 
-      function setBONUS_FEED_PRICE(uint  _price) public{
+      function setBONUS_FEED_PRICE(uint  _price) public onlyOwner {
         BONUS_FEED_PRICE = _price;
     }
 
