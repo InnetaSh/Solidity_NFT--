@@ -40,6 +40,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
     event PetFed(uint tokenId, uint newHealth);
     event PetDied(uint tokenId);
     event PetCreated(uint tokenId, address petOwner);
+    event PetSold(uint tokenId, address from, address to);
 
     modifier onlyPetOwner(uint tokenId) {
         require(ownerOf(tokenId) ==  msg.sender, "Not your pet");
@@ -93,6 +94,8 @@ contract NFTPet is ERC721URIStorage, Ownable {
 
         _removePetFromUser(msg.sender, tokenId);
         userPets[to].push(tokenId);
+
+        emit PetSold(tokenId, msg.sender, to);
     }
 
     function _removePetFromUser(address petOwner, uint256 tokenId) internal {

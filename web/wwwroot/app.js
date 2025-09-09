@@ -30,7 +30,7 @@
 
 
     getPetBtn.addEventListener('click', getPet);
-    byePetBtn.addEventListener('click', byePet);
+    /*byePetBtn.addEventListener('click', byePet);
     choisePetImageBtn_1.addEventListener('click', () => selectPetImage(0));
     choisePetImageBtn_2.addEventListener('click', () => selectPetImage(1));
     choisePetImageBtn_3.addEventListener('click', () => selectPetImage(2));
@@ -39,13 +39,13 @@
     feedPetBonusBtn.addEventListener('click', feedPetBonus);
 
     sellPetBtn.addEventListener('click', sellPet);
-    burnDeadPetBtn.addEventListener('click', burnDeadPet);
+    burnDeadPetBtn.addEventListener('click', burnDeadPet);*/
 
 
 
     let provider, signer, contract, cfg;
     let isConnecting = false;
-    const pinataApiKey = "5fa105b1702db3a70bdb";                           // ключ в Pinata - изменить на свой!
+    const pinataApiKey = "5fa105b1702db3a70bdb";                           
     const pinataSecretApiKey = "5b403cce9f748764c813c476ba7e79c936ff2d97153b3b2f866dd6c463c7e85a";
     const defaultImage = "https://gateway.pinata.cloud/ipfs/bafkreiesrks5z3a4rkskyr7hmqmay7woqxnu76e57sc5sdat2kuq2h57zm";  // ссылка на изображение по умолчанию (для 1 питомца )
     let chosenImage = null;
@@ -71,7 +71,8 @@
             return;
         }
         cfg = await res.json();
-        contractAddrEl.textContent = cfg.address;
+                console.log("Config loaded:", cfg);
+       // contractAddrEl.textContent = cfg.address;
 
 
     }
@@ -93,7 +94,7 @@
             signer = await provider.getSigner();
             contract = new ethers.Contract(cfg.address, cfg.abi, signer);
 
-            tokenIds = await contract.getMyPets();
+            /*tokenIds = await contract.getMyPets();
             if (tokenIds.length != 0) {
                 await loadMyPets();
             }
@@ -103,11 +104,12 @@
             if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${ethers.formatEther(petPrice)} ETH`;
             if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
 
-
+            */
             subscribeEvents();
             console.log("Connected to contract at:", cfg.address);
             
         } catch (e) {
+            alert(" connection error: ")
             alert("Error: " + e.message);
         } finally {
             isConnecting = false;
@@ -148,7 +150,7 @@
     }
 
     async function getPet() {                                                    // функция - получение питомца
-        const petName = inputPetName.value.trim();
+        petName = inputPetName.value.trim();
 
         if (!petName) {
             alert("Введите имя питомца.");
@@ -514,11 +516,21 @@
     }
 
     async function getPET_PRICE() {
-        return await contract.PET_PRICE();
+        try {
+            petPrice = await contract.getPET_PRICE();
+        } catch (e) {
+            alert("Ошибка при получении цены питомца: " + e.message);
+            return "0";
+        }
     }
 
     async function getBONUS_FEED_PRICE() {
-        return await contract.BONUS_FEED_PRICE();
+        try {
+            return await contract.getBONUS_FEED_PRICE();
+        } catch (e) {
+            alert("Ошибка при получении цены бонусного кормления: " + e.message);
+            return "0";
+        }
     }
 
 
@@ -531,18 +543,19 @@
         await loadConfig();
         await connect();
 
-        petPrice = await getPET_PRICE();
+        /*petPrice = await getPET_PRICE();
         petBonusFeedPrice = await getBONUS_FEED_PRICE();
 
         if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${ethers.formatEther(petPrice)} ETH`;
         if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
-
+        
         tokenIds = await contract.getMyPets();
         if (tokenIds.length > 0) {
             selectedTokenId = tokenIds[0];  
             await loadMyPets();
             await updatePetStats();        
         }
+        */
         
         setInterval(updatePetStats, 3 * 60 * 1000);
     };
