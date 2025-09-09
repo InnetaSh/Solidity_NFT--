@@ -45,9 +45,9 @@
 
     let provider, signer, contract, cfg;
     let isConnecting = false;
-    const pinataApiKey = "ВСТАВЬ_СВОЙ_API_KEY";                           // ключ в Pinata - изменить на свой!
-    const pinataSecretApiKey = "ВСТАВЬ_СВОЙ_SECRET_API_KEY";
-    const defaultImage = "https://gateway.pinata.cloud/ipfs/QmDefaultImage123";  // ссылка на изображение по умолчанию (для 1 питомца ) - изменить на своё!
+    const pinataApiKey = "5fa105b1702db3a70bdb";                           // ключ в Pinata - изменить на свой!
+    const pinataSecretApiKey = "5b403cce9f748764c813c476ba7e79c936ff2d97153b3b2f866dd6c463c7e85a";
+    const defaultImage = "https://gateway.pinata.cloud/ipfs/bafkreiesrks5z3a4rkskyr7hmqmay7woqxnu76e57sc5sdat2kuq2h57zm";  // ссылка на изображение по умолчанию (для 1 питомца )
     let chosenImage = null;
     let selectedTokenId = null;
     let tokenIds = [];
