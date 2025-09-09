@@ -1,3 +1,190 @@
-﻿body
-{
+﻿@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap');
+
+
+body {
+    width: 100%;
+    box-sizing: border-box;
+    background: #ffda79;
+}
+.main {
+    font-family: 'Comic Neue', cursive, Arial, sans-serif;
+    background: linear-gradient(135deg, #ffda79, #ff8a00);
+    width: 80%;
+    margin: 30px auto;
+    padding: 20px;
+    border-radius: 25px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+    color: #3b2f2f;
+}
+
+h1 {
+    text-align: center;
+    font-size: 2.5rem;
+    color: #fff;
+    text-shadow: 2px 2px 5px #cc6600;
+    margin-bottom: 15px;
+}
+.gameInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.intro {
+    background: #fff3c4;
+    border-radius: 20px;
+    padding: 18px 22px;
+    box-shadow: inset 0 0 15px #f6c90e;
+    color: #6b4e00;
+    font-size: 1.05rem;
+    line-height: 1.4;
+    margin-bottom: 25px;
+   
+}
+
+.petForm{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+label {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-top: 15px;
+    display: block;
+    color: #5a3e00;
+    text-shadow: 1px 1px 1px #f6c90e;
+}
+
+input[type="text"], select {
+    width: 50%;
+    padding: 12px 15px;
+    font-size: 1.1rem;
+    border-radius: 18px;
+    border: 2px solid #ffb300;
+    margin-top: 8px;
+    outline: none;
+    box-shadow: 0 4px 6px #ffb300aa;
+    transition: 0.3s;
+}
+
+    input[type="text"]:focus, select:focus {
+        border-color: #ff7b00;
+        box-shadow: 0 6px 12px #ff7b0011;
+        background: #fff7d9;
+    }
+
+input[type="file"] {
+    margin-top: 10px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #5a3e00;
+    background: #ffeb8a;
+    padding: 8px 10px;
+    box-shadow: 0 4px 8px #ffb300aa;
+    transition: background 0.3s;
+    border: none;
+}
+
+    input[type="file"]:hover {
+        background: #ffd633;
+    }
+
+button {
+    margin-top: 25px;
+    width: 50%;
+    background: linear-gradient(145deg, #ff7b00, #ffb300);
+    border: none;
+    padding: 16px 0;
+    color: #fff;
+    font-weight: 900;
+    font-size: 1.3rem;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 8px 15px #cc6600;
+    text-shadow: 2px 2px 4px #663300;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    user-select: none;
+}
+
+    button:hover {
+        box-shadow: 0 12px 20px #ff6a00;
+        transform: scale(1.05);
+    }
+
+    button:active {
+        transform: scale(0.98);
+        box-shadow: 0 6px 10px #cc5500;
+    }
+
+
+
+    /*============================
+        IMG STYLES
+   =============================== */
+.petLogoSmall {
+    margin: 10px;
+    max-width: 300px;
+    border-radius: 50%;
+    box-shadow: 0 6px 12px #ff9f00cc;
+    border: 4px solid #ffd633;
+    user-select: none;
+    transition: transform 0.3s ease;
+}
+
+.image-wrapper {
+    position: relative;
+    width: 250px; 
+    height: 250px;
+}
+
+.petLogoSmall {
+    width: 90%;
+    height: 90%;
+    object-fit: cover;
+    display: none; 
+}
+
+.loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    z-index: 10;
+}
+
+
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+
+/*=================================*/
+
+
+.non-display {
+    display: none !important;
+}
+
+.errorText {
+    color: red !important;
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 10px;
+    text-align: center;
 }

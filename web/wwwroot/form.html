@@ -1,0 +1,33 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>NFT-pet</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <div class="main">
+        <h1>NFT-питомец</h1>
+
+        <form id="petFormSection" class="petForm">
+            <label for="petName">Имя питомца:</label>
+            <input type="text" id="petName" name="petName" placeholder="Как зовут твоего питомца?" required />
+
+            <div>Твой питомец:</div>
+            <div class="image-wrapper">
+                <div class="loader" id="avatarLoader"></div>
+                <img id="petAvatarSelect"
+                     class="petLogoSmall"
+                     alt="Выбранный аватар" />
+            </div>
+            <button type="submit" id="getPetBtn">Получить питомца</button>
+        </form>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
+    <script src="app.js"></script>
+    <script src="appDesign.js"></script>
+</body>
+</html>
