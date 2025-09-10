@@ -425,12 +425,17 @@
                 const experience = metadata.attributes.find(attr => attr.trait_type === "Experience")?.value ?? '—';
 
                 card.innerHTML = `
+                <div class="pet-card-container">
                     <img src="${metadata.image}" class="petLogo" alt="${metadata.name}" />
-                    <h3>${metadata.name}</h3>
-                    <h3>Age:</h3><h4>${age}</h4>
-                    <h3>Health:</h3><h4>${health}</h4>
-                    <h3>Experience:</h3><h4>${experience}</h4>
+                     <div>
+                        <h2>${metadata.name}</h2>
+                        <h3>Age: <span>${age}</span></h3>
+                        <h3>Health: <span>${health}</span></h3>
+                        <h3>Experience: <span>${experience}</span></h3>
+                        </div>
+                     </div>
                     <button class="select-pet-btn" onclick="selectPet(${tokenId})">Выбрать</button>
+               
                 `;
 
 
