@@ -39,7 +39,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
     event EvolutionStage(uint tokenId, uint age);
     event PetFed(uint tokenId, uint newHealth);
     event PetDied(uint tokenId);
-    event PetCreated(uint tokenId, address petOwner);
+    event PetCreated(uint256 indexed tokenId, address indexed owner);
     event PetSold(uint tokenId, address from, address to);
 
     modifier onlyPetOwner(uint tokenId) {

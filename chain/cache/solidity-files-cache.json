@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "E:\\STEP\\SmartContracts\\NFT-питомец\\chain\\contracts\\NFTPet.sol": {
-      "lastModificationDate": 1757429620335,
-      "contentHash": "4affe0c99b9df32cdbdd69fe30129514",
+      "lastModificationDate": 1757514697365,
+      "contentHash": "f63b4fa99626d4a0b581fdca24a95749",
       "sourceName": "contracts/NFTPet.sol",
       "solcConfig": {
         "version": "0.8.28",

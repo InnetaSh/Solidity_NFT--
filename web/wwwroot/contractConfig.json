@@ -1,5 +1,5 @@
 {
-  "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "address": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
   "abi": [
     {
       "inputs": [],
@@ -95,19 +95,6 @@
       "type": "event"
     },
     {
-      "type": "event",
-      "name": "PetBurned",
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "anonymous": false
-    },
-    {
       "anonymous": false,
       "inputs": [
         {
@@ -143,15 +130,15 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "uint256",
           "name": "tokenId",
           "type": "uint256"
         },
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "address",
-          "name": "petOwner",
+          "name": "owner",
           "type": "address"
         }
       ],

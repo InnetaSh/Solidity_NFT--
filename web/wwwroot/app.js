@@ -1,4 +1,4 @@
-﻿// JavaScript source code
+﻿
 (async function () {
 
     const nameEl = document.getElementById("petName");
@@ -29,7 +29,11 @@
 
 
 
-    getPetBtn.addEventListener('click', getPet);
+    //getPetBtn.addEventListener('click', getPet);
+    getPetBtn.addEventListener('click', function (e) {
+        e.preventDefault(); // ⛔ stops the form from submitting
+        getPet();
+    });
     /*byePetBtn.addEventListener('click', byePet);
     choisePetImageBtn_1.addEventListener('click', () => selectPetImage(0));
     choisePetImageBtn_2.addEventListener('click', () => selectPetImage(1));
@@ -45,12 +49,15 @@
 
     let provider, signer, contract, cfg;
     let isConnecting = false;
-    const pinataApiKey = "5fa105b1702db3a70bdb";                           
-    const pinataSecretApiKey = "5b403cce9f748764c813c476ba7e79c936ff2d97153b3b2f866dd6c463c7e85a";
+   // const pinataApiKey = "5fa105b1702db3a70bdb";                           
+   // const pinataSecretApiKey = "5b403cce9f748764c813c476ba7e79c936ff2d97153b3b2f866dd6c463c7e85a";
+
+    const JWT = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI2MTQ2ZGRkNC1mZDk4LTQ4NDMtOTlkNC02ZGJkNjUzYTk5ZDgiLCJlbWFpbCI6ImlubmV0YTNAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjdkZjIxNjdjZWQ2ZDk5MGFiMGI0Iiwic2NvcGVkS2V5U2VjcmV0IjoiYjM5YzljN2FiZjMxMGVmNjEwYzdjZTQxOTFkYWI0YWFlMDcxNDBlOGVmMWU5NjRlZjhiYzBiODc1ZDBlZWVkNiIsImV4cCI6MTc4ODk3MDQ5OX0.maWoeIsrDcY4JL9ItBvJuQXMy8WWCShG1CbZ_I_29EE"; // токен JWT для Pinata (вместо apiKey и secretApiKey) 
     const defaultImage = "https://gateway.pinata.cloud/ipfs/bafkreiesrks5z3a4rkskyr7hmqmay7woqxnu76e57sc5sdat2kuq2h57zm";  // ссылка на изображение по умолчанию (для 1 питомца )
     let chosenImage = null;
     let selectedTokenId = null;
     let tokenIds = [];
+    let tokenId;
 
     let name, health, lastFed, experience, age, status;
     let petPrice = "0";                                             // цена питомца !
@@ -105,7 +112,7 @@
             if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
 
             */
-            subscribeEvents();
+            await subscribeEvents();
             console.log("Connected to contract at:", cfg.address);
             
         } catch (e) {
@@ -116,42 +123,44 @@
         }
     }
 
-    function subscribeEvents() {
+    async function subscribeEvents() {
         if (!contract) {
             console.error("Contract is not initialized");
             return;
         }
-        contract.on("PetCreated", (tokenId, owner, event) => {
+        contract.on("PetCreated", async (tokenId, owner, event) => {
             console.log(`PetCreated: ID ${tokenId.toString()}`);
-            loadMyPets();
+            await loadMyPets();
         });
 
-        contract.on("PetFed", (tokenId, newHealth, newExperience, event) => {
+        contract.on("PetDied", async (tokenId, newHealth, newExperience, event) => {
             if (selectedTokenId && selectedTokenId === tokenId.toString()) {
-                updatePetStats();
+                await updatePetStats();
             }
         });
 
-        contract.on("PetSold", (tokenId, from, to, event) => {
+        contract.on("PetSold", async (tokenId, from, to, event) => {
             if (selectedTokenId && selectedTokenId === tokenId.toString()) {
                 alert(`Питомец ${tokenId.toString()} был продан.`);
                 selectedTokenId = null;
-                loadMyPets();
+                await loadMyPets();
             }
         });
 
-        contract.on("PetBurned", (tokenId, event) => {
+        contract.on("PetFed", async (tokenId, event) => {
             if (selectedTokenId && selectedTokenId === tokenId.toString()) {
                 alert(`Питомец ${tokenId.toString()} был сожжен.`);
                 selectedTokenId = null;
-                loadMyPets();
+                await loadMyPets();
             }
         });
     }
 
-    async function getPet() {                                                    // функция - получение питомца
-        petName = inputPetName.value.trim();
+    async function getPet() {
 
+        // функция - получение питомца
+        petName = inputPetName.value.trim();
+       
         if (!petName) {
             alert("Введите имя питомца.");
             return;
@@ -182,16 +191,58 @@
                     { trait_type: "Experience", value: 0 }
                 ]
             };
-
+            console.log(metadata);
        
-            const tokenURI = await uploadMetadataToPinata(metadata);                     // 3. Загружаем метаданные
+            console.log("Начинаем загрузку метаданных на Pinata");
+            const tokenURI = await uploadMetadataToPinata(metadata);
+            console.log("Token URI:", tokenURI);
+            console.log("Метаданные загружены, tokenURI:", tokenURI);                     // 3. Загружаем метаданные
+      
 
-            const tx = await contract.getPet(petName, tokenURI, { value: 0 });          // 4. Вызываем контракт
+
+
+            console.log("Отправляем транзакцию getPet");
+            const tx = await contract.getPet(petName, tokenURI, { value: 0 });
+            console.log("Транзакция отправлена, ожидаем подтверждения");
             const receipt = await tx.wait();
+            console.log("Транзакция подтверждена", receipt);
+            console.log("Логи транзакции:", receipt.logs);
 
-            
-            const event = receipt.events.find(e => e.event === "PetCreated");
-            const tokenId = event.args.tokenId.toString();
+
+            //const iface = new ethers.Interface(abi);
+            for (const log of receipt.logs) {
+                try {
+                    const parsed = iface.parseLog(log);
+                    if (parsed.name === "PetCreated") {
+                        console.log("Parsed событие:", parsed);
+                        tokenId = parsed.args.tokenId.toString();
+                       
+                        break;
+                    }
+                } catch (err) {
+                    // log не подошёл — не наше событие
+                }
+            }
+
+            if (!tokenId) {
+                console.error("Событие 'PetCreated' не найдено в логах транзакции.");
+                alert("Питомец создан, но событие 'PetCreated' не получено.");
+                return;
+            }
+
+            selectedTokenId = tokenId;
+
+            /*const event = receipt?.events?.find(e => e.event === "PetCreated");
+            if (!event) {
+                console.error("Событие 'PetCreated' не найдено в receipt:", receipt);
+                alert("Питомец создан, но событие 'PetCreated' не получено.");
+                return;
+            }
+            tokenId = event.args.tokenId.toString();*/
+
+
+
+            console.log("tokenId:", tokenId);
             selectedTokenId = tokenId;
 
             name = petName;
@@ -199,10 +250,11 @@
             experience = 0;
             age = 0;
             status = "Active";
-            console.log(`Pet created with Token ID: ${tokenId}`);
+            //console.log(`Pet created with Token ID: ${tokenId}`);
             alert(`🎉 Вы успешно завели питомца по имени ${petName}!`);
         } catch (e) {
-            alert("Ошибка: " + e.message);
+            console.error("Ошибка при создании питомца:", e);
+            alert("Ошибка: " + (e.message || e));
         }
     }
 
@@ -263,33 +315,70 @@
     // Создай API - ключ в Pinata и вставь в код.
 
 
+    
+    async function uploadMetadataToPinata(metadata) {
+        const payload = {
+            pinataMetadata: { name: `PetMetadata-${metadata.name}` },
+            pinataContent: metadata
+        };
 
-    async function uploadMetadataToPinata(metadata) {               //Вспомогательная функция — загрузка метаданные  на IPFS
-        const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
-        
+        console.log(">>> Пытаемся отправить POST /upload", payload);
 
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                pinata_api_key: pinataApiKey,
-                pinata_secret_api_key: pinataSecretApiKey
-            },
-            body: JSON.stringify({
-                pinataMetadata: {
-                    name: `PetMetadata-${metadata.name}`
-                },
-                pinataContent: metadata
-            })
-        });
+        //const response1 = await fetch("http://localhost:3000/upload", {
+        //    method: "POST",
+        //    headers: { "Content-Type": "application/json" },
+        //    body: JSON.stringify(payload),
+        //    //credentials: "include",
+        //    mode: "cors"
+        //});
+        //const rawText1 = await response1.text();
+        //console.log("response1", response1);
+        //let js = JSON.parse(rawText1);
+        //console.log("response1", js);
+        //return;
 
-        if (!response.ok) {
-            throw new Error("Ошибка при загрузке метаданных на Pinata");
+        try {
+            const response = await fetch("http://localhost:3000/upload", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+                //credentials: "include",
+                //mode: "cors"
+            });
+
+            // Считываем тело один раз
+            const rawText = await response.text();
+            console.log(">>> raw response text:", rawText);
+
+            // Пробуем распарсить
+            let result;
+            try {
+                result = JSON.parse(rawText);
+            } catch (e) {
+                console.error(">>> Ошибка при парсинге JSON:", e);
+                throw new Error("Сервер вернул невалидный JSON");
+            }
+
+            // Проверяем статус ответа
+            if (!response.ok) {
+                if (response.status === 429) {
+                    throw new Error("Слишком много запросов к серверу. Попробуйте позже.");
+                }
+                throw new Error(`Ошибка при загрузке метаданных: ${response.status}`);
+            }
+
+            console.log(">>> Успешно загружено, результат:", result);
+
+            // Возвращаем URL
+            return `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`;
+
+        } catch (e) {
+            console.error(">>> Ошибка fetch:", e);
+            throw e;
         }
-
-        const result = await response.json();
-        return `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`;
     }
+
+
 
 
     function selectPetImage(index) {
@@ -305,7 +394,7 @@
 
             if (tokenIds.length === 0) {
                 container.innerHTML = "<p>У вас ещё нет питомцев.</p>";
-                document.getElementById('selectedPetDetails').style.display = "none";
+               // document.getElementById('selectedPetDetails').classList.add("non-display");
                 return;
             }
 
@@ -320,11 +409,19 @@
                 card.classList.add("pet-card");
                 card.dataset.tokenId = tokenId;
 
+                const age = metadata.attributes.find(attr => attr.trait_type === "Age")?.value ?? '—';
+                const health = metadata.attributes.find(attr => attr.trait_type === "Health")?.value ?? '—';
+                const experience = metadata.attributes.find(attr => attr.trait_type === "Experience")?.value ?? '—';
+
                 card.innerHTML = `
-                    <img src="${metadata.image}" alt="${metadata.name}" />
+                    <img src="${metadata.image}" class="petLogo" alt="${metadata.name}" />
                     <h3>${metadata.name}</h3>
+                    <h3>Age:</h3><h4>${age}</h4>
+                    <h3>Health:</h3><h4>${health}</h4>
+                    <h3>Experience:</h3><h4>${experience}</h4>
                     <button class="select-pet-btn" onclick="selectPet(${tokenId})">Выбрать</button>
                 `;
+
 
                 card.querySelector(".select-pet-btn").addEventListener("click", async () => {
                     if (currentlySelectedCard) {
@@ -539,10 +636,11 @@
 
 
     window.onload = async function () {
-        
         await loadConfig();
         await connect();
 
+
+        await loadMyPets();
         /*petPrice = await getPET_PRICE();
         petBonusFeedPrice = await getBONUS_FEED_PRICE();
 
@@ -557,7 +655,7 @@
         }
         */
         
-        setInterval(updatePetStats, 3 * 60 * 1000);
+        //setInterval(updatePetStats, 3 * 60 * 1000);
     };
  
 })();
