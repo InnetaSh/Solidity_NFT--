@@ -6,7 +6,7 @@
 
         const avatarImg = document.getElementById('petAvatarSelect');
         const loader = document.getElementById('avatarLoader');
-        
+        if (!loader || !avatarImg) return;
         loader.style.display = 'block';
         avatarImg.style.display = 'none';
 

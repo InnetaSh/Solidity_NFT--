@@ -30,10 +30,12 @@
 
 
     //getPetBtn.addEventListener('click', getPet);
-    getPetBtn.addEventListener('click', function (e) {
-        e.preventDefault(); // ⛔ stops the form from submitting
-        getPet();
-    });
+    if (getPetBtn) {
+        getPetBtn.addEventListener('click', function (e) {
+            e.preventDefault(); 
+            getPet();
+        });
+    }
     /*byePetBtn.addEventListener('click', byePet);
     choisePetImageBtn_1.addEventListener('click', () => selectPetImage(0));
     choisePetImageBtn_2.addEventListener('click', () => selectPetImage(1));
@@ -397,6 +399,15 @@
                // document.getElementById('selectedPetDetails').classList.add("non-display");
                 return;
             }
+            if (tokenIds.length > 0) {
+                const gameInfo = document.getElementById('gameInfoSection');
+                if (gameInfo) {
+                    gameInfo.classList.add("non-display");
+                    
+                }
+
+            }
+         
 
             for (let i = 0; i < tokenIds.length; i++) {
                 const tokenId = tokenIds[i];
