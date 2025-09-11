@@ -17,12 +17,18 @@
         </div>
     </div>
     <div class="petContainer-section">
-        <div id="selectPetContainer" class=""></div>
+        <form id="petFormShopSection" class="petForm">
+            <label for="petName" class="small-text">Имя питомца:</label>
+            <input type="text" id="inputPetNameShop" name="petName" placeholder="Как зовут твоего питомца?" required />
+        </form>
+        <div id="choisePet"> </div>
+        <button class="button-big" id="byePetBtn">Купить питомца</button>
     </div>
 
 
-        <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
-        <script src="app.js"></script>
-        <script src="appDesign.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
+    <script src="app.js"></script>
+    <script src="appDesign.js"></script>
 </body>
 </html>

@@ -14,6 +14,7 @@
     const petBonusFeedPriceEl = document.getElementById("petBonusFeedPrice");
 
     const getPetBtn = document.getElementById('getPetBtn');  //кнопка получить питомца при первом заходе на сайт
+    const openShopBtn = document.getElementById('openShopBtn');  //кнопка открыть магазин питомцев
     const byePetBtn = document.getElementById('byePetBtn');  //кнопка купить питомца
     const choisePetImageBtn_1 = document.getElementById('choisePetImageBtn_1');  //кнопка купить питомца #1
     const choisePetImageBtn_2 = document.getElementById('choisePetImageBtn_2');  //кнопка купить питомца #1
@@ -34,6 +35,12 @@
         getPetBtn.addEventListener('click', function (e) {
             e.preventDefault(); 
             getPet();
+        });
+    }
+    if (openShopBtn) {
+        openShopBtn.addEventListener('click', function (e) {
+            e.preventDefault(); 
+            goToShop();
         });
     }
     /*byePetBtn.addEventListener('click', byePet);
@@ -68,9 +75,9 @@
     let currentlySelectedCard = null;
 
     const petImagesAge_0 = [
-        "https://gateway.pinata.cloud/ipfs/QmCatImage123...",  // ссылки на изображения питомцев - изменить на свои!
-        "https://gateway.pinata.cloud/ipfs/QmDogImage456...",
-        "https://gateway.pinata.cloud/ipfs/QmUnicornImage789..."
+        "https://gateway.pinata.cloud/ipfs/bafkreiesrks5z3a4rkskyr7hmqmay7woqxnu76e57sc5sdat2kuq2h57zm",
+        "https://gateway.pinata.cloud/ipfs/bafkreiesrks5z3a4rkskyr7hmqmay7woqxnu76e57sc5sdat2kuq2h57zm", // пример
+        "https://gateway.pinata.cloud/ipfs/bafkreiesrks5z3a4rkskyr7hmqmay7woqxnu76e57sc5sdat2kuq2h57zm",
     ];
 
     async function loadConfig() {
@@ -368,9 +375,20 @@
             tokenIds = await contract.getMyPets();
             const container = document.getElementById("petContainer");  //на фронте сделать контейнер с таким id для отображения питомцев
 
-            if (tokenIds.length > 0 && !window.location.href.includes("dashboard.html")) {
-                window.location.href = "dashboard.html";
+            const manuallyNavigated = sessionStorage.getItem("manualNavigation");
+
+            if (tokenIds.length > 0 &&
+                !window.location.href.includes("my-pets.html") &&
+                !manuallyNavigated
+            ) {
+                window.location.href = "my-pets.html";
             }
+
+            // После загрузки my-pets.html — очищаем флаг
+            if (window.location.href.includes("my-pets.html")) {
+                sessionStorage.removeItem("manualNavigation");
+            }
+
 
             if (container) { 
                 container.innerHTML = "";
@@ -638,9 +656,31 @@
     }
 
 
+    function goToShop() {
+        // Устанавливаем флаг, чтобы предотвратить автоперенаправление
+        sessionStorage.setItem("manualNavigation", "true");
+        window.location.href = "shop.html";
+    }
 
+    document.addEventListener("DOMContentLoaded", function () {
+        const path = window.location.pathname;
 
+        if (path.endsWith("shop.html")) {
+            const containerShop = document.getElementById("choisePet");
 
+            petImagesAge_0.forEach((url, index) => {
+                const card = document.createElement("div");
+                card.className = "image-card";
+
+                card.innerHTML = `
+                <img src="${url}" alt="Изображение ${index + 1}">
+                <button onclick="selectImage('${url}')">Выбрать</button>
+            `;
+
+                containerShop.appendChild(card);
+            });
+        }
+    });
 
     window.onload = async function () {
         await loadConfig();
