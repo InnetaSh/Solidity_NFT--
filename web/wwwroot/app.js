@@ -158,9 +158,7 @@
         });
     }
 
-    async function getPet() {
-
-        // функция - получение питомца
+    async function getPet() {            // функция - получение питомца
         petName = inputPetName.value.trim();
        
         if (!petName) {
@@ -222,7 +220,7 @@
                         break;
                     }
                 } catch (err) {
-                    // log не подошёл — не наше событие
+                    
                 }
             }
 
@@ -233,17 +231,7 @@
             }
 
             selectedTokenId = tokenId;
-
-            /*const event = receipt?.events?.find(e => e.event === "PetCreated");
-            if (!event) {
-                console.error("Событие 'PetCreated' не найдено в receipt:", receipt);
-                alert("Питомец создан, но событие 'PetCreated' не получено.");
-                return;
-            }
-            tokenId = event.args.tokenId.toString();*/
-
-
-
+            
             console.log("tokenId:", tokenId);
             selectedTokenId = tokenId;
 
@@ -252,8 +240,10 @@
             experience = 0;
             age = 0;
             status = "Active";
-            //console.log(`Pet created with Token ID: ${tokenId}`);
+            console.log(`Pet created with Token ID: ${tokenId}`);
             alert(`🎉 Вы успешно завели питомца по имени ${petName}!`);
+
+            await loadMyPets();
         } catch (e) {
             console.error("Ошибка при создании питомца:", e);
             alert("Ошибка: " + (e.message || e));
@@ -325,34 +315,20 @@
         };
 
         console.log(">>> Пытаемся отправить POST /upload", payload);
-
-        //const response1 = await fetch("http://localhost:3000/upload", {
-        //    method: "POST",
-        //    headers: { "Content-Type": "application/json" },
-        //    body: JSON.stringify(payload),
-        //    //credentials: "include",
-        //    mode: "cors"
-        //});
-        //const rawText1 = await response1.text();
-        //console.log("response1", response1);
-        //let js = JSON.parse(rawText1);
-        //console.log("response1", js);
-        //return;
+        
 
         try {
             const response = await fetch("http://localhost:3000/upload", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-                //credentials: "include",
-                //mode: "cors"
+                body: JSON.stringify(payload)
             });
 
-            // Считываем тело один раз
+            
             const rawText = await response.text();
             console.log(">>> raw response text:", rawText);
 
-            // Пробуем распарсить
+          
             let result;
             try {
                 result = JSON.parse(rawText);
@@ -361,7 +337,6 @@
                 throw new Error("Сервер вернул невалидный JSON");
             }
 
-            // Проверяем статус ответа
             if (!response.ok) {
                 if (response.status === 429) {
                     throw new Error("Слишком много запросов к серверу. Попробуйте позже.");
@@ -371,7 +346,7 @@
 
             console.log(">>> Успешно загружено, результат:", result);
 
-            // Возвращаем URL
+            
             return `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`;
 
         } catch (e) {
@@ -392,64 +367,80 @@
         try {
             tokenIds = await contract.getMyPets();
             const container = document.getElementById("petContainer");  //на фронте сделать контейнер с таким id для отображения питомцев
-            container.innerHTML = "";
 
-            if (tokenIds.length === 0) {
-                container.innerHTML = "<p>У вас ещё нет питомцев.</p>";
-               // document.getElementById('selectedPetDetails').classList.add("non-display");
-                return;
+            if (tokenIds.length > 0 && !window.location.href.includes("dashboard.html")) {
+                window.location.href = "dashboard.html";
             }
-            if (tokenIds.length > 0) {
-                const gameInfo = document.getElementById('gameInfoSection');
-                if (gameInfo) {
-                    gameInfo.classList.add("non-display");
-                    
+
+            if (container) { 
+                container.innerHTML = "";
+
+                if (tokenIds.length === 0) {
+                    container.innerHTML = "<p>У вас ещё нет питомцев.</p>";
+                   // document.getElementById('selectedPetDetails').classList.add("non-display");
+                    return;
                 }
+           
 
-            }
-         
+                    for (let i = 0; i < tokenIds.length; i++) {
+                        const tokenId = tokenIds[i];
+                        const tokenURI = await contract.tokenURI(tokenId);
+                        const response = await fetch(tokenURI);
+                        const metadata = await response.json();
 
-            for (let i = 0; i < tokenIds.length; i++) {
-                const tokenId = tokenIds[i];
-                const tokenURI = await contract.tokenURI(tokenId);
-                const response = await fetch(tokenURI);
-                const metadata = await response.json();
+                        // Создаем карточку питомца
+                        const card = document.createElement("div");
+                        card.classList.add("pet-card");
+                        card.dataset.tokenId = tokenId;
 
-                // Создаем карточку питомца
-                const card = document.createElement("div");
-                card.classList.add("pet-card");
-                card.dataset.tokenId = tokenId;
+                        const age = metadata.attributes.find(attr => attr.trait_type === "Age")?.value ?? '—';
+                        const health = metadata.attributes.find(attr => attr.trait_type === "Health")?.value ?? '—';
+                        const experience = metadata.attributes.find(attr => attr.trait_type === "Experience")?.value ?? '—';
 
-                const age = metadata.attributes.find(attr => attr.trait_type === "Age")?.value ?? '—';
-                const health = metadata.attributes.find(attr => attr.trait_type === "Health")?.value ?? '—';
-                const experience = metadata.attributes.find(attr => attr.trait_type === "Experience")?.value ?? '—';
+                        if (tokenIds.length === 1 && !selectedTokenId) {  // если питомец один - выбираем его сразу (при загрузке страницы)
 
-                card.innerHTML = `
-                <div class="pet-card-container">
-                    <img src="${metadata.image}" class="petLogo" alt="${metadata.name}" />
-                     <div>
-                        <h2>${metadata.name}</h2>
-                        <h3>Age: <span>${age}</span></h3>
-                        <h3>Health: <span>${health}</span></h3>
-                        <h3>Experience: <span>${experience}</span></h3>
-                        </div>
-                     </div>
-                    <button class="select-pet-btn" onclick="selectPet(${tokenId})">Выбрать</button>
+                            card.innerHTML = `
+                            <div class="pet-card-container">
+                                <img src="${metadata.image}" class="petLogo" alt="${metadata.name}" />
+                                 <div>
+                                    <h2>${metadata.name}</h2>
+                                    <h3>Age: <span>${age}</span></h3>
+                                    <h3>Health: <span>${health}</span></h3>
+                                    <h3>Experience: <span>${experience}</span></h3>
+                                    </div>
+                                 </div>
+                                <button class="button-big select-pet-btn" onclick="selectPet(${tokenId})">Выбрать</button>
                
-                `;
+                            `;
+                        } else {
+                            card.innerHTML = `
+                            <div class="pet-card-container-grid">
+                                <img src="${metadata.image}" class="petLogo" alt="${metadata.name}" />
+                                 <div>
+                                    <h2>${metadata.name}</h2>
+                                    <h3>Age: <span>${age}</span></h3>
+                                    <h3>Health: <span>${health}</span></h3>
+                                    <h3>Experience: <span>${experience}</span></h3>
+                                    </div>
+                                 </div>
+                                <button class="button-big select-pet-btn" onclick="selectPet(${tokenId})">Выбрать</button>
+               
+                            `;
+                        }
 
 
-                card.querySelector(".select-pet-btn").addEventListener("click", async () => {
-                    if (currentlySelectedCard) {
-                        currentlySelectedCard.classList.remove("selected");
-                    }
-                    card.classList.add("selected");       //selected - класс для выделения выбранного питомца НУЖЕН В CSS!
-                    currentlySelectedCard = card;
+                        card.querySelector(".select-pet-btn").addEventListener("click", async () => {
+                            if (currentlySelectedCard) {
+                                currentlySelectedCard.classList.remove("selected");
+                            }
+                            card.classList.add("selected");       //selected - класс для выделения выбранного питомца НУЖЕН В CSS!
+                            currentlySelectedCard = card;
 
-                    await selectPet(tokenId);
-                });
+                            await selectPet(tokenId);
+                        });
 
-                container.appendChild(card);
+                        container.appendChild(card);
+                }
             }
         } catch (e) {
             console.error("Ошибка при загрузке питомцев:", e.message);
