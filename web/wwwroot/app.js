@@ -365,7 +365,7 @@
 
 
 
-    function selectPetImage(index) {
+    function selectImage(index) {
         chosenImage = petImagesAge_0[index];
         console.log("Выбрана картинка:", chosenImage);
     }
@@ -672,11 +672,19 @@
                 const card = document.createElement("div");
                 card.className = "image-card";
 
-                card.innerHTML = `
-                <img src="${url}" alt="Изображение ${index + 1}">
-                <button onclick="selectImage('${url}')">Выбрать</button>
-            `;
+                const img = document.createElement("img");
+                img.src = url;
+                img.alt = `Изображение ${index + 1}`;
 
+                const button = document.createElement("button");
+                button.textContent = "Выбрать";
+
+                button.addEventListener("click", () => {
+                    selectImage(index);
+                });
+
+                card.appendChild(img);
+                card.appendChild(button);
                 containerShop.appendChild(card);
             });
         }
