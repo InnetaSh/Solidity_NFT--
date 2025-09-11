@@ -16,9 +16,6 @@
     const getPetBtn = document.getElementById('getPetBtn');  //кнопка получить питомца при первом заходе на сайт
     const openShopBtn = document.getElementById('openShopBtn');  //кнопка открыть магазин питомцев
     const byePetBtn = document.getElementById('byePetBtn');  //кнопка купить питомца
-    const choisePetImageBtn_1 = document.getElementById('choisePetImageBtn_1');  //кнопка купить питомца #1
-    const choisePetImageBtn_2 = document.getElementById('choisePetImageBtn_2');  //кнопка купить питомца #1
-    const choisePetImageBtn_3 = document.getElementById('choisePetImageBtn_3');  //кнопка купить питомца #1
 
     const feedPetBtn = document.getElementById('feedPetBtn');  //кнопка кормить питомца
     const feedPetBonusBtn = document.getElementById('feedPetBonusBtn');  //кнопка кормить питомца бонусом
@@ -27,6 +24,7 @@
 
 
     const inputPetName = document.getElementById('inputPetName');
+    const inputPetNameBye = document.getElementById('inputPetNameBye');
 
 
 
@@ -43,10 +41,10 @@
             goToShop();
         });
     }
-    /*byePetBtn.addEventListener('click', byePet);
-    choisePetImageBtn_1.addEventListener('click', () => selectPetImage(0));
-    choisePetImageBtn_2.addEventListener('click', () => selectPetImage(1));
-    choisePetImageBtn_3.addEventListener('click', () => selectPetImage(2));
+    if (byePetBtn) {
+        byePetBtn.addEventListener('click', byePet);
+    }
+     /*
 
     feedPetBtn.addEventListener('click', feedPet);
     feedPetBonusBtn.addEventListener('click', feedPetBonus);
@@ -113,14 +111,14 @@
             /*tokenIds = await contract.getMyPets();
             if (tokenIds.length != 0) {
                 await loadMyPets();
-            }
+            }*/
             petPrice = await getPET_PRICE();
             petBonusFeedPrice = await getBONUS_FEED_PRICE();
 
             if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${ethers.formatEther(petPrice)} ETH`;
             if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
 
-            */
+            
             await subscribeEvents();
             console.log("Connected to contract at:", cfg.address);
             
@@ -258,7 +256,7 @@
     }
 
     async function byePet() {                                                    // функция - получение питомца
-        const petName = inputPetName.value.trim();
+        const petName = inputPetNameBye.value.trim();
 
         if (!petName || !chosenImage) {
             alert("Введите имя и выберите изображение питомца.");
@@ -678,9 +676,23 @@
 
                 const button = document.createElement("button");
                 button.textContent = "Выбрать";
+                button.classList.add("select-btn");
+                button.classList.add("button-medium");
 
                 button.addEventListener("click", () => {
                     selectImage(index);
+
+                    const allButtons = document.querySelectorAll(".select-btn");
+                    allButtons.forEach((btn) => {
+                        btn.disabled = true;
+                        btn.classList.add("button-disabled");  
+                        btn.textContent = "Недоступно";
+                    });
+
+                    
+                    button.disabled = false;
+                    button.classList.remove("button-disabled"); 
+                    button.textContent = "✔️";
                 });
 
                 card.appendChild(img);
