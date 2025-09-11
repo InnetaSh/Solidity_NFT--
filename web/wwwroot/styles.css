@@ -42,6 +42,12 @@ h1 {
    
 }
 
+
+/*==========================================
+                 FORM STYLES
+============================================*/
+
+
 .petForm{
     display: flex;
     flex-direction: column;
@@ -49,14 +55,6 @@ h1 {
 
 }
 
-label {
-    font-weight: 700;
-    font-size: 1.1rem;
-    margin-top: 15px;
-    display: block;
-    color: #5a3e00;
-    text-shadow: 1px 1px 1px #f6c90e;
-}
 
 input[type="text"], select {
     width: 50%;
@@ -122,12 +120,37 @@ button {
 
 
 
-    /*============================
+
+/*============================
+        TEXT STYLES
+ =============================== */
+
+.small-text {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-top: 15px;
+    display: block;
+    color: #5a3e00;
+    text-shadow: 1px 1px 1px #f6c90e;
+}
+
+
+
+
+
+   /*============================
         IMG STYLES
    =============================== */
+.image-wrapper {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    margin-bottom: 20px;
+}
+
 .petLogoSmall {
     margin: 10px;
-    max-width: 300px;
+    width: 90%;
     border-radius: 50%;
     box-shadow: 0 6px 12px #ff9f00cc;
     border: 4px solid #ffd633;
@@ -135,11 +158,6 @@ button {
     transition: transform 0.3s ease;
 }
 
-.image-wrapper {
-    position: relative;
-    width: 250px; 
-    height: 250px;
-}
 
 
 .petLogo {
@@ -179,6 +197,8 @@ button {
         transform: translate(-50%, -50%) rotate(360deg);
     }
 }
+
+
 
 
 

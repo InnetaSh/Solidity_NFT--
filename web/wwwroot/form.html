@@ -11,18 +11,21 @@
         <h1>NFT-питомец</h1>
 
         <form id="petFormSection" class="petForm">
-            <label for="petName">Имя питомца:</label>
+            <label for="petName" class="small-text">Имя питомца:</label>
             <input type="text" id="inputPetName" name="petName" placeholder="Как зовут твоего питомца?" required />
-
-            <div>Твой питомец:</div>
+        </form>
+        <div class="petForm">
+            <div class="small-text">Твой питомец:</div>
             <div class="image-wrapper">
                 <div class="loader" id="avatarLoader"></div>
                 <img id="petAvatarSelect"
                      class="petLogoSmall"
                      alt="Выбранный аватар" />
             </div>
-            <button  id="getPetBtn">Получить питомца</button>
-        </form>
+            <button id="getPetBtn">Получить питомца</button>
+        </div>
+          
+      
     </div>
 
     <div id="petContainer1"></div>
