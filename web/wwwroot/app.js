@@ -67,7 +67,7 @@
     let tokenId;
 
     let name, health, lastFed, experience, age, status;
-    let petPrice = "0";                                             // цена питомца !
+    let petPrice = "0.01";                                             // цена питомца !
     let petBonusFeedPrice = "0";                                    // цена бонусного кормления питомца !
 
     let currentlySelectedCard = null;
@@ -117,7 +117,7 @@
 
             if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${ethers.formatEther(petPrice)} ETH`;
             if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
-
+            
             
             await subscribeEvents();
             console.log("Connected to contract at:", cfg.address);
@@ -291,8 +291,9 @@
 
 
             const tokenURI = await uploadMetadataToPinata(metadata);                     //  Загружаем метаданные
+            const value = ethers.parseEther(petPrice);
 
-            const tx = await contract.getPet(petName, tokenURI, { value: petPrice });          //  Вызываем контракт
+            const tx = await contract.getPet(petName, tokenURI, { value: value });          //  Вызываем контракт
             await tx.wait();
             name = petName;
             health = 100;
@@ -372,6 +373,12 @@
         try {
             tokenIds = await contract.getMyPets();
             const container = document.getElementById("petContainer");  //на фронте сделать контейнер с таким id для отображения питомцев
+            if (tokenIds.length === 1) {
+                container.classList.add("pet-сontainer");
+            } else {
+                container.classList.add("pet-сontainer-grid");
+            }
+
 
             const manuallyNavigated = sessionStorage.getItem("manualNavigation");
 
@@ -413,36 +420,20 @@
                         const health = metadata.attributes.find(attr => attr.trait_type === "Health")?.value ?? '—';
                         const experience = metadata.attributes.find(attr => attr.trait_type === "Experience")?.value ?? '—';
 
-                        if (tokenIds.length === 1 && !selectedTokenId) {  // если питомец один - выбираем его сразу (при загрузке страницы)
-
                             card.innerHTML = `
                             <div class="pet-card-container">
                                 <img src="${metadata.image}" class="petLogo" alt="${metadata.name}" />
-                                 <div>
-                                    <h2>${metadata.name}</h2>
-                                    <h3>Age: <span>${age}</span></h3>
-                                    <h3>Health: <span>${health}</span></h3>
-                                    <h3>Experience: <span>${experience}</span></h3>
+                                 <div class="petInfo-container">
+                                    <h2 class = "big-text text-decoratoin">${metadata.name}</h2>
+                                    <h3 class = "medium-text">Age: <span class="small-text"> ${age}</span></h3>
+                                    <h3 class = "medium-text">Health: <span class="small-text"> ${health}</span></h3>
+                                    <h3 class = "medium-text">Exp: <span class="small-text"> ${experience}</span></h3>
                                     </div>
                                  </div>
                                 <button class="button-big select-pet-btn" onclick="selectPet(${tokenId})">Выбрать</button>
                
                             `;
-                        } else {
-                            card.innerHTML = `
-                            <div class="pet-card-container-grid">
-                                <img src="${metadata.image}" class="petLogo" alt="${metadata.name}" />
-                                 <div>
-                                    <h2>${metadata.name}</h2>
-                                    <h3>Age: <span>${age}</span></h3>
-                                    <h3>Health: <span>${health}</span></h3>
-                                    <h3>Experience: <span>${experience}</span></h3>
-                                    </div>
-                                 </div>
-                                <button class="button-big select-pet-btn" onclick="selectPet(${tokenId})">Выбрать</button>
-               
-                            `;
-                        }
+                       
 
 
                         card.querySelector(".select-pet-btn").addEventListener("click", async () => {
@@ -637,11 +628,17 @@
 
     async function getPET_PRICE() {
         try {
-            petPrice = await contract.getPET_PRICE();
-        } catch (e) {
-            alert("Ошибка при получении цены питомца: " + e.message);
-            return "0";
-        }
+                if (!contract) {
+                    throw new Error("Контракт не инициализирован");
+                }
+
+                const price = await contract.getPET_PRICE();
+                return ethers.formatEther(price); 
+            } catch (err) {
+                console.error("Ошибка получения цены питомца:", err);
+                return "0";
+            }
+        
     }
 
     async function getBONUS_FEED_PRICE() {
@@ -660,11 +657,13 @@
         window.location.href = "shop.html";
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", async function () {
         const path = window.location.pathname;
 
         if (path.endsWith("shop.html")) {
             const containerShop = document.getElementById("choisePet");
+           
+
 
             petImagesAge_0.forEach((url, index) => {
                 const card = document.createElement("div");
@@ -674,6 +673,10 @@
                 img.src = url;
                 img.alt = `Изображение ${index + 1}`;
 
+
+                const price = document.createElement("div");
+                price.textContent = petPrice + "ETH";
+
                 const button = document.createElement("button");
                 button.textContent = "Выбрать";
                 button.classList.add("select-btn");
@@ -682,20 +685,24 @@
                 button.addEventListener("click", () => {
                     selectImage(index);
 
+                    const allCards = document.querySelectorAll(".image-card");
+                    allCards.forEach((c) => c.classList.remove("selected"));
+
                     const allButtons = document.querySelectorAll(".select-btn");
                     allButtons.forEach((btn) => {
-                        btn.disabled = true;
                         btn.classList.add("button-disabled");  
-                        btn.textContent = "Недоступно";
+                        btn.textContent = "Выбрать";
                     });
 
                     
                     button.disabled = false;
                     button.classList.remove("button-disabled"); 
                     button.textContent = "✔️";
+                    card.classList.add("selected");
                 });
 
                 card.appendChild(img);
+                card.appendChild(price);
                 card.appendChild(button);
                 containerShop.appendChild(card);
             });
@@ -708,12 +715,12 @@
 
 
         await loadMyPets();
-        /*petPrice = await getPET_PRICE();
+        petPrice = await getPET_PRICE();
         petBonusFeedPrice = await getBONUS_FEED_PRICE();
 
         if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${ethers.formatEther(petPrice)} ETH`;
         if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
-        
+        /*
         tokenIds = await contract.getMyPets();
         if (tokenIds.length > 0) {
             selectedTokenId = tokenIds[0];  
