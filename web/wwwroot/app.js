@@ -44,11 +44,14 @@
     if (byePetBtn) {
         byePetBtn.addEventListener('click', byePet);
     }
-     /*
-
-    feedPetBtn.addEventListener('click', feedPet);
-    feedPetBonusBtn.addEventListener('click', feedPetBonus);
-
+     
+    if (feedPetBtn) {
+        feedPetBtn.addEventListener('click', feedPet);
+    }
+    if (feedPetBonusBtn) {
+        feedPetBonusBtn.addEventListener('click', feedPetBonus);
+    }
+    /*
     sellPetBtn.addEventListener('click', sellPet);
     burnDeadPetBtn.addEventListener('click', burnDeadPet);*/
 
@@ -77,6 +80,67 @@
         "https://gateway.pinata.cloud/ipfs/bafkreiesrks5z3a4rkskyr7hmqmay7woqxnu76e57sc5sdat2kuq2h57zm", // пример
         "https://gateway.pinata.cloud/ipfs/bafkreiesrks5z3a4rkskyr7hmqmay7woqxnu76e57sc5sdat2kuq2h57zm",
     ];
+
+
+    const petImages = [
+        [
+            "https://gateway.pinata.cloud/ipfs/bafkreiesrks5z3a4rkskyr7hmqmay7woqxnu76e57sc5sdat2kuq2h57zm",
+            "https://gateway.pinata.cloud/ipfs/bafkreicufsktjmkvns7oyyo3xmutictoc57vsqo6kjbhq4eg5lt45rc4nu",
+            "https://gateway.pinata.cloud/ipfs/bafkreigaabm7tr4mjv7b767vehj4o7nc2s2lhpxswzrmsbdh2eripvmany",
+            "https://gateway.pinata.cloud/ipfs/bafkreiaovzzvlo443oxbixskibdhp2jlxbthd22zkp4inof5g4g4lyampi",
+            "https://gateway.pinata.cloud/ipfs/bafkreicjlx4btknag3fwtqjtdrnwidnpe6hr7zk346hcnw2dnou4ztyyea",
+            "https://gateway.pinata.cloud/ipfs/bafkreiau335uxd4kvq65d3kvwjlkv253ffqg6v6nbivm2nwnukcwm5rrgm",
+        ],
+        [
+            "https://gateway.pinata.cloud/ipfs/bafybeid4ni6ak26pe7f7nvdxgmdl4vvhfxc7pje6l2zv5tozzlh42rcbtq",
+            "https://gateway.pinata.cloud/ipfs/bafkreiejyvif773ehoaj5dxrput6guxuwdz7p7ahoidwt6lpk2tgqv3dvm",
+            "https://gateway.pinata.cloud/ipfs/bafkreih2ve624cnff4nnzlnudknpaelhvlrohqqx36taafftvtng4qos4u",
+            "https://gateway.pinata.cloud/ipfs/bafkreigpofnxplxvzj72tgpdvegh26bltsc3wmsnfgfrdsqh4xkq6d4hga",
+            "https://gateway.pinata.cloud/ipfs/bafkreib3u732jcutgvpfwit7pr43wjnmvxow7yog3zgg3xgkmbder5kexm",
+            "https://gateway.pinata.cloud/ipfs/bafkreiessrf773mdwchaw2ek346ghxbcocrq2ywp53peibksgxrwpoxdbu",
+        ],
+        [
+            "https://gateway.pinata.cloud/ipfs/bafkreidd7yqozgtwlokrttk2o4leye2hvzovj2rzf6mtsz367c2d635ojq",
+            "https://gateway.pinata.cloud/ipfs/bafkreig4ioiwfu3ref7bnb5i5h2tlkicpszm6ud54d25gkmjtzafdvek3y",
+            "https://gateway.pinata.cloud/ipfs/bafkreic47pq6f4t5miozbql6fu2fxqd2uhwjkig65ypqctta6doquqgxmu",
+            "https://gateway.pinata.cloud/ipfs/bafkreiaj3jluunuuexhatldmwcnhvmw6ijukjhorcgdbyziirq2c7w25ya",
+            "https://gateway.pinata.cloud/ipfs/bafkreigtqshc2f7sjcblkpsol7i4vblw7siig7tahff3uttogcqy3datpa",
+            "https://gateway.pinata.cloud/ipfs/bafkreibodcubpnbt3qh6cjiaf752nvfspbtrdlqnuni55aqkjkzprarwna",
+        ],
+        [
+            "https://gateway.pinata.cloud/ipfs/bafkreidvm7g54b55xmkl2nhqxc3f5imdpm66pf3px4fah3nxpgi4cjohai",
+            "https://gateway.pinata.cloud/ipfs/bafkreigvxguvexwskgzdnrdrlzj6n55g6frxckzpcwsx7cn4vyofugwx6u",
+            "https://gateway.pinata.cloud/ipfs/bafkreicecu7s2wr6bnujdpdoleysddtlibhbhn3hsfj23p6o43zjqzog3a",
+            "https://gateway.pinata.cloud/ipfs/bafkreifhr3q7bvezor5jw5gerncl5ued54y2vimydi4v5xkwbkgja2dwqe",
+            "https://gateway.pinata.cloud/ipfs/bafkreicupvwx3fmgzhptky4yzj7ds3knf33xdsnvddu5hp52ciaovzp57y",
+            "https://gateway.pinata.cloud/ipfs/bafkreiene6zyyyi3w3ii2nq6xqyfhyosxcf5l7hgc3mywfnkcdyytfuu2u",
+        ],
+        [
+            "https://gateway.pinata.cloud/ipfs/bafkreiabht53mi7y3agqb6ghubo3hrsbegl3s7hnsk3ku4xmjnzzh6ph64",
+            "https://gateway.pinata.cloud/ipfs/bafkreiabibhr2f5vqrihuogtw3uytnjfr3kqxyvdqxwah2cgrlayaekor4",
+            "https://gateway.pinata.cloud/ipfs/bafkreig3bhywt5tiwzbag5ljturzl3g66bidw4rz6ghn355win4ejczem4",
+            "https://gateway.pinata.cloud/ipfs/bafkreifpia2mulq3dgdshvvvrhylhlwfp5w6ui5xi2yq2dgwshytjpzu7u",
+            "https://gateway.pinata.cloud/ipfs/bafkreiekwajkawmpfbwhf2e67rfflcvttdafy34qztycvdjz7acwremchm",
+            "https://gateway.pinata.cloud/ipfs/bafkreibwpuhptptm3gg42zcofdvzcqzz55juxxrmsqlq4xwcnrxunsgrzu",
+        ],
+        [
+            "https://gateway.pinata.cloud/ipfs/bafybeicigmkf3gl2k6m5q5ucad56fcxxm72etmyybjyex3qnbzhqucthxe",
+            "https://gateway.pinata.cloud/ipfs/bafkreievqkohrxg7eleyqkqqwodukgpv5g4h5hzf5ztupookqyzpwndgum",
+            "https://gateway.pinata.cloud/ipfs/bafybeibq4kskdopodxtgdpcygqdrufnoitx4as6ph3ihiatcd5j5etknai",
+            "https://gateway.pinata.cloud/ipfs/bafybeia3fkrkwz3ido5wutbawu3y3wo7dqnl6dwi3vjm6zzacxcq2klnlq",
+            "https://gateway.pinata.cloud/ipfs/bafybeibliwrqt4rlyjagrcjhrpu6kls673dretqhwh46nj6zs23wscw4yu",
+            "https://gateway.pinata.cloud/ipfs/bafybeieoez3olfzhxi2azur6ewunmrbbapcrs33ss43u5k4w6cjguilkye",
+        ],
+        [
+            "https://gateway.pinata.cloud/ipfs/bafkreihmtt2sq2isvcf6xzco6s3butzkrq67fismreosv5ohlndijedbnm",
+            "https://gateway.pinata.cloud/ipfs/bafybeifdca24t7p47jeisromawd2uhtuaovftwn3q2h6qzgr5zmsb257fe",
+            "https://gateway.pinata.cloud/ipfs/bafkreigmprrucnfttghpgx5ezkt3p4w5rv6qmb73ijknqrreqt7eoetaze",
+            "https://gateway.pinata.cloud/ipfs/bafkreicu7rwatuoef6nonema5ztdev4r2oynasu5wc34wzmvhvyrmyj6q4",
+            "https://gateway.pinata.cloud/ipfs/bafkreigckfid56sx7bqvpfwzdkshqm7xqcnozyk6fyixioqicaxynezdfe",
+            "https://gateway.pinata.cloud/ipfs/bafkreifnm6i6runbclon3l3avrfkx5iuje2okppgpilhich47m545fb424",
+        ],
+       
+];
 
 
 
@@ -260,7 +324,7 @@
 
     async function byePet() {                                                    // функция - получение питомца
         const petName = inputPetNameBye.value.trim();
-
+      
         if (!petName || !chosenImage) {
             alert("Введите имя и выберите изображение питомца.");
             return;
@@ -304,6 +368,7 @@
             age = 0;
             status = "Active";
             alert(`🎉 Вы успешно завели питомца по имени ${petName}!`);
+            window.location.href = 'my-pets.html';
         } catch (e) {
             alert("Ошибка: " + e.message);
         }
@@ -368,7 +433,8 @@
 
 
     function selectImage(index) {
-        chosenImage = petImagesAge_0[index];
+        chosenImage = petImages[index][0];
+        localStorage.setItem("chosenImage", chosenImage);
         console.log("Выбрана картинка:", chosenImage);
     }
 
@@ -518,16 +584,16 @@
 
 
     async function feedPet() {
-        if (!selectedTokenId) {
+        if (!tokenId) {
             alert("Сначала выберите питомца.");
             return;
         }
         try {
-            const tx = await contract.feedPet(selectedTokenId);
+            const tx = await contract.feedPet(tokenId);
             await tx.wait();
 
-            health = await contract.getHealth(selectedTokenId);
-            experience = await contract.getPetExperience(selectedTokenId);
+            health = await contract.getHealth(tokenId);
+            experience = await contract.getPetExperience(tokenId);
             alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}`);
         }
         catch (e) {
@@ -536,19 +602,19 @@
     }
 
     async function feedPetBonus() {
-        if (!selectedTokenId) {
+        if (!tokenId) {
             alert("Сначала выберите питомца.");
             return;
         }
 
         try {
 
-            const tx = await contract.feedPetBonus(selectedTokenId, { value: petBonusFeedPrice });
+            const tx = await contract.feedPetBonus(tokenId, { value: petBonusFeedPrice });
 
             await tx.wait();
 
-            const health = await contract.getHealth(selectedTokenId);
-            const experience = await contract.getPetExperience(selectedTokenId); // убедись, что эта функция есть в контракте
+            const health = await contract.getHealth(tokenId);
+            const experience = await contract.getPetExperience(tokenId); 
 
             alert(`🐾 Вы покормили питомца бонусом!\nЗдоровье: ${health}\nОпыт: ${experience}`);
         } catch (e) {
@@ -595,7 +661,8 @@
 
    
     async function sellPet() {                     // Продать питомца другому адресу
-        if (!selectedTokenId) {
+        if (!selected
+        ) {
             alert("Сначала выберите питомца.");
             return;
         }
@@ -684,7 +751,7 @@
         await loadConfig();
         await connect();
 
-        const tokenId = getTokenIdFromURL();
+        tokenId = getTokenIdFromURL();
         console.log("TokenId from URL:", tokenId);
         if (!tokenId) {
             console.error("tokenId не найден в URL");
@@ -740,10 +807,41 @@
 
         if (path.endsWith("shop.html")) {
             const containerShop = document.getElementById("choisePet");
-           
+            const petPrice = 0.01; 
 
+            const imageKeys = [
+                "shopImage1",
+                "shopImage2",
+                "shopImage3",
+                "shopImage4",
+                "shopImage5",
+                "shopImage6"
+            ];
 
-            petImagesAge_0.forEach((url, index) => {
+  
+            const allCached = imageKeys.every(key => localStorage.getItem(key) !== null);
+
+            let shopImages = [];
+
+            if (allCached) {
+                shopImages = imageKeys.map(key => localStorage.getItem(key));
+            } else {
+                shopImages = [
+                    petImages[1][0],
+                    petImages[2][0],
+                    petImages[3][0],
+                    petImages[4][0],
+                    petImages[5][0],
+                    petImages[6][0],
+                ];
+
+                shopImages.forEach((url, index) => {
+                    localStorage.setItem(`shopImage${index + 1}`, url);
+                });
+            }
+
+            
+            shopImages.forEach((url, index) => {
                 const card = document.createElement("div");
                 card.className = "image-card";
 
@@ -751,14 +849,12 @@
                 img.src = url;
                 img.alt = `Изображение ${index + 1}`;
 
-
                 const price = document.createElement("div");
-                price.textContent = petPrice + "ETH";
+                price.textContent = petPrice + " ETH";
 
                 const button = document.createElement("button");
                 button.textContent = "Выбрать";
-                button.classList.add("select-btn");
-                button.classList.add("button-medium");
+                button.classList.add("select-btn", "button-medium");
 
                 button.addEventListener("click", () => {
                     selectImage(index);
@@ -768,13 +864,12 @@
 
                     const allButtons = document.querySelectorAll(".select-btn");
                     allButtons.forEach((btn) => {
-                        btn.classList.add("button-disabled");  
+                        btn.classList.add("button-disabled");
                         btn.textContent = "Выбрать";
                     });
 
-                    
                     button.disabled = false;
-                    button.classList.remove("button-disabled"); 
+                    button.classList.remove("button-disabled");
                     button.textContent = "✔️";
                     card.classList.add("selected");
                 });

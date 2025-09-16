@@ -90,7 +90,7 @@ h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
-
+    width:80%;
 }
 
 
@@ -249,7 +249,7 @@ input[type="file"] {
     width: 50%;
     background: linear-gradient(145deg, var(--color-btn-bg-start), var(--color-btn-bg-end));
     border: none;
-    padding: 16px 0;
+    padding: 16px 5px;
     color: var(--color-btn-text);
     font-weight: 900;
     font-size: 1.3rem;
@@ -293,6 +293,12 @@ button:active {
     }
 
 
+.bonus-btn-container{
+    position:absolute;
+    right: 10%;
+    top:0;
+
+}
 /*============================
         SHOP-CARD  STYLES
    =============================== */
@@ -316,6 +322,10 @@ button:active {
     border-radius: 25px;
     box-shadow: 0 15px 30px rgba(0,0,0,0.25);
     color: var(--color-text-main);
+    display: flex;
+    flex-direction:column;
+    align-items: center;
+    justify-content:center;
 }
 
 .pet-сontainer{
@@ -351,8 +361,9 @@ button:active {
     font-size: 1.05rem;
     line-height: 1.4;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction:column;
+    justify-content:space-between;
+    align-items:center;
 }
 
 
@@ -441,14 +452,34 @@ button:active {
 /*=====================================
     SHOP STYLES
   ====================================*/
-#choisePet {
+
+.petShopContainer-section {
+    width: 90%;
+    margin-left: 5%;
+    margin-top: 30px;
+    background: var(--color-intro-bg);
+    border-radius: 20px;
+    padding: 18px 22px;
+    box-shadow: inset 0 0 15px var(--color-intro-border-shadow);
+    color: var(--color-intro-text);
+    font-size: 1.05rem;
+    line-height: 1.4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.choisePet-image-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 20px;
     padding: 20px;
-    max-width: 1000px;
+    padding: 20px;
+    width: 80%;
     margin: 0 auto;
 }
+
+
 
 .image-card {
     background: var(--color-intro-bg);
