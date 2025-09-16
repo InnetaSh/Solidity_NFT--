@@ -8,6 +8,8 @@
     const ageEl = document.getElementById("petAge");
     const statusEl = document.getElementById("petStatus");
 
+    const feedErrorEl = document.getElementById("feedError");
+
     const contractAddrEl = document.getElementById("contractAddress");
 
     const petPriceEl = document.getElementById("petPrice");
@@ -595,9 +597,43 @@
             health = await contract.getHealth(tokenId);
             experience = await contract.getPetExperience(tokenId);
             alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}`);
+            const totalExperience = await contract.getPetExperience(tokenId);
+            if (experienceEl) experienceEl.textContent = ` ${totalExperience}`;
         }
         catch (e) {
-            alert("Ошибка при кормлении питомца: " + e.message);
+            let errorMessage = "Ошибка при кормлении питомца.";
+
+            // Если Metamask вернул сообщение из require
+            const revertReason =
+                e?.error?.reason ||
+                e?.error?.revert?.args?.[0] ||
+                e?.reason ||
+                e?.revert?.args?.[0];
+
+            if (revertReason) {
+                if (revertReason.includes("Too early to feed again")) {
+                    errorMessage = "⏳ Питомца можно кормить не чаще, чем раз в 5 минут!";
+                } else if (revertReason.includes("Pet is not active")) {
+                    errorMessage = "💀 Питомец мёртв или неактивен. Возродите его.";
+                } else {
+                    errorMessage = "⚠️ " + revertReason;
+                }
+            } else if (e?.message) {
+                errorMessage = "⚠️ " + e.message;
+            }
+
+            if (feedErrorEl) {
+                feedErrorEl.textContent = errorMessage;
+                feedErrorEl.classList.add("error-message");
+
+                setTimeout(() => {
+                    feedErrorEl.classList.add("hidden");
+                }, 5000);
+
+                
+                feedErrorEl.classList.remove("hidden");
+            }
+        
         }
     }
 
@@ -615,6 +651,8 @@
 
             const health = await contract.getHealth(tokenId);
             const experience = await contract.getPetExperience(tokenId); 
+
+
 
             alert(`🐾 Вы покормили питомца бонусом!\nЗдоровье: ${health}\nОпыт: ${experience}`);
         } catch (e) {
