@@ -11,12 +11,12 @@
         avatarImg.style.display = 'none';
 
         avatarImg.src = defaultImage;
-        
+
         avatarImg.addEventListener('load', () => {
             loader.style.display = 'none';
             avatarImg.style.display = 'block';
         });
-        
+
         avatarImg.addEventListener('error', () => {
             loader.style.display = 'none';
             avatarImg.alt = 'Ошибка загрузки аватара';
@@ -24,5 +24,8 @@
         });
     });
 
+
+    
+    
 
 })();

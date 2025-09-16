@@ -78,6 +78,9 @@
         "https://gateway.pinata.cloud/ipfs/bafkreiesrks5z3a4rkskyr7hmqmay7woqxnu76e57sc5sdat2kuq2h57zm",
     ];
 
+
+
+
     async function loadConfig() {
         const res = await fetch('contractConfig.json');
         if (!res.ok) {
@@ -373,6 +376,11 @@
         try {
             tokenIds = await contract.getMyPets();
             const container = document.getElementById("petContainer");  //на фронте сделать контейнер с таким id для отображения питомцев
+
+            if (!container) {
+                return; 
+            }
+
             if (tokenIds.length === 1) {
                 container.classList.add("pet-сontainer");
             } else {
@@ -382,8 +390,9 @@
 
             const manuallyNavigated = sessionStorage.getItem("manualNavigation");
 
-            if (tokenIds.length > 0 &&
-                !window.location.href.includes("my-pets.html") &&
+            if (
+                window.location.href.includes("index.html") &&
+                tokenIds.length > 0 &&
                 !manuallyNavigated
             ) {
                 window.location.href = "my-pets.html";
@@ -405,48 +414,70 @@
                 }
            
 
-                    for (let i = 0; i < tokenIds.length; i++) {
-                        const tokenId = tokenIds[i];
-                        const tokenURI = await contract.tokenURI(tokenId);
-                        const response = await fetch(tokenURI);
-                        const metadata = await response.json();
+                for (let i = 0; i < tokenIds.length; i++) {
+                    const tokenId = tokenIds[i];
+                    const tokenURI = await contract.tokenURI(tokenId);
+                    const response = await fetch(tokenURI);
+                    const metadata = await response.json();
 
-                        // Создаем карточку питомца
-                        const card = document.createElement("div");
-                        card.classList.add("pet-card");
-                        card.dataset.tokenId = tokenId;
+                    const card = document.createElement("div");
+                    card.classList.add("pet-card");
+                    card.dataset.tokenId = tokenId;
 
-                        const age = metadata.attributes.find(attr => attr.trait_type === "Age")?.value ?? '—';
-                        const health = metadata.attributes.find(attr => attr.trait_type === "Health")?.value ?? '—';
-                        const experience = metadata.attributes.find(attr => attr.trait_type === "Experience")?.value ?? '—';
+                    const age = metadata.attributes.find(attr => attr.trait_type === "Age")?.value ?? '—';
+                    const health = metadata.attributes.find(attr => attr.trait_type === "Health")?.value ?? '—';
+                    const experience = metadata.attributes.find(attr => attr.trait_type === "Experience")?.value ?? '—';
 
-                            card.innerHTML = `
-                            <div class="pet-card-container">
-                                <img src="${metadata.image}" class="petLogo" alt="${metadata.name}" />
-                                 <div class="petInfo-container">
-                                    <h2 class = "big-text text-decoratoin">${metadata.name}</h2>
-                                    <h3 class = "medium-text">Age: <span class="small-text"> ${age}</span></h3>
-                                    <h3 class = "medium-text">Health: <span class="small-text"> ${health}</span></h3>
-                                    <h3 class = "medium-text">Exp: <span class="small-text"> ${experience}</span></h3>
-                                    </div>
-                                 </div>
-                                <button class="button-big select-pet-btn" onclick="selectPet(${tokenId})">Выбрать</button>
-               
-                            `;
+                   
+                    card.innerHTML = `
+                        <div class="pet-card-item">
+                            <div class="loader" id="avatarLoader-${i}"></div>
+                            <div class="non-display pet-card-container" id="petContainer-item-${i}">
+                                <img src="${metadata.image}" class="petLogo" id="petLogo-${i}" alt="${metadata.name}" />
+                                <div class="petInfo-container">
+                                    <h2 class="big-text text-decoratoin">${metadata.name}</h2>
+                                    <h3 class="medium-text">Age: <span class="small-text">${age}</span></h3>
+                                    <h3 class="medium-text">Health: <span class="small-text">${health}</span></h3>
+                                    <h3 class="medium-text">Exp: <span class="small-text">${experience}</span></h3>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const button = document.createElement("button");
+                    button.className = "button-big select-pet-btn";
+                    button.textContent = "Выбрать";
+
+                    button.addEventListener("click", () => {
+                        selectPet(tokenId); 
+                    });
+
+                   
+                    card.appendChild(button);
+
+
                        
+                    container.appendChild(card);
 
+                    const img = document.getElementById(`petLogo-${i}`);
+                    const container_item = document.getElementById(`petContainer-item-${i}`);
+                    const loader = document.getElementById(`avatarLoader-${i}`);
+                    if (img && loader) {
+                        loader.style.display = "block";
+                        img.style.display = "none";
 
-                        card.querySelector(".select-pet-btn").addEventListener("click", async () => {
-                            if (currentlySelectedCard) {
-                                currentlySelectedCard.classList.remove("selected");
-                            }
-                            card.classList.add("selected");       //selected - класс для выделения выбранного питомца НУЖЕН В CSS!
-                            currentlySelectedCard = card;
-
-                            await selectPet(tokenId);
+                        img.addEventListener("load", () => {
+                            loader.style.display = "none";
+                            container_item.classList.remove('non-display');
+                            img.style.display = "block";
                         });
 
-                        container.appendChild(card);
+                        img.addEventListener("error", () => {
+                            loader.style.display = "none";
+                            img.alt = "Ошибка загрузки изображения";
+                            img.style.display = "block";
+                        });
+                    }
                 }
             }
         } catch (e) {
@@ -455,38 +486,17 @@
     }
 
     async function selectPet(tokenId) {
-        try {
-            selectedTokenId = tokenId;
-            [name, health, lastFed, experience, age, status] = await getPetStatus(tokenId);
-
-            const tokenURI = await contract.tokenURI(tokenId);
-            const response = await fetch(tokenURI);
-            const metadata = await response.json();
-
-            if (nameEl) nameEl.textContent = name;
-            if (healthEl) healthEl.textContent = `Здоровье: ${health}`;
-            if (lastFedEl) lastFedEl.textContent = `Последнее кормление: ${lastFed}`;
-            if (experienceEl) experienceEl.textContent = `Опыт: ${experience}`;
-            if (ageEl) ageEl.textContent = `Возраст: ${age}`;
-            if (statusEl) statusEl.textContent = `Статус: ${status}`;
-
-           
-            const petImageEl = document.getElementById("selectedPetImage");
-            if (petImageEl) {
-                petImageEl.src = metadata.image;
-                petImageEl.alt = name;
-            }
-            
-            alert("Выбран питомец с tokenId: " + tokenId);
-        }
-        catch (e) {
-            alert("Ошибка при выборе питомца: " + e.message);
-        }
+        window.location.href = `dashboard.html?tokenId=${tokenId}`;
+        console.log("Selecting pet with tokenId:", tokenId);
+     
         
     }
 
     async function getPetStatus(tokenId) {
         try {
+            if (!contract) {
+               await connect();
+            }
 
 
             const [petName, petHealth, petLastFed, petExperience, petAge, petStatus] = await contract.getPetStatus(tokenId);
@@ -643,7 +653,12 @@
 
     async function getBONUS_FEED_PRICE() {
         try {
-            return await contract.getBONUS_FEED_PRICE();
+                if (!contract) {
+                    throw new Error("Контракт не инициализирован");
+                }
+
+                const price = await contract.getBONUS_FEED_PRICE();
+                return ethers.formatEther(price); 
         } catch (e) {
             alert("Ошибка при получении цены бонусного кормления: " + e.message);
             return "0";
@@ -656,6 +671,69 @@
         sessionStorage.setItem("manualNavigation", "true");
         window.location.href = "shop.html";
     }
+
+    function getTokenIdFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get("tokenId");
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        const path = window.location.pathname;
+        if (!path.endsWith("dashboard.html")) return;
+
+        await loadConfig();
+        await connect();
+
+        const tokenId = getTokenIdFromURL();
+        console.log("TokenId from URL:", tokenId);
+        if (!tokenId) {
+            console.error("tokenId не найден в URL");
+            return;
+        }
+
+        try {
+            const [name, health, lastFed, experience, age, status] = await getPetStatus(tokenId);
+            const tokenURI = await contract.tokenURI(tokenId);
+            const response = await fetch(tokenURI);
+            const metadata = await response.json();
+            
+            if (nameEl) nameEl.textContent = name;
+            if (healthEl) healthEl.textContent = ` ${health}`;
+            if (lastFedEl) lastFedEl.textContent = ` ${lastFed}`;
+            if (experienceEl) experienceEl.textContent = ` ${experience}`;
+            if (ageEl) ageEl.textContent = ` ${age}`;
+            if (statusEl) statusEl.textContent = ` ${status}`;
+
+            const petImageEl = document.getElementById("selectedPetImage");
+            if (petImageEl) {
+                petImageEl.src = metadata.image;
+                petImageEl.alt = name;
+            }
+
+
+           
+            const loader = document.getElementById(`avatarLoader`);
+            const dashboard = document.getElementById("dashboard");
+            if (petImageEl && loader) {
+                loader.style.display = "block";
+
+                petImageEl.addEventListener("load", () => {
+                    loader.style.display = "none";
+                    dashboard.classList.remove('non-display');
+                   
+                });
+
+                petImageEl.addEventListener("error", () => {
+                    loader.style.display = "none";
+                    petImageEl.alt = "Ошибка загрузки изображения";
+                });
+            }
+
+        } catch (e) {
+            console.error("Ошибка при загрузке данных питомца:", e);
+        }
+    });
+
 
     document.addEventListener("DOMContentLoaded", async function () {
         const path = window.location.pathname;
@@ -716,10 +794,10 @@
 
         await loadMyPets();
         petPrice = await getPET_PRICE();
-        petBonusFeedPrice = await getBONUS_FEED_PRICE();
+        //petBonusFeedPrice = await getBONUS_FEED_PRICE();
 
         if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${ethers.formatEther(petPrice)} ETH`;
-        if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
+       // if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
         /*
         tokenIds = await contract.getMyPets();
         if (tokenIds.length > 0) {

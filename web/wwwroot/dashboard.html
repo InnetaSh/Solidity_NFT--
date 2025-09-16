@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>NFT-pet</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -11,18 +13,44 @@
         <div class="pet-header">
             <h1>NFT-питомец</h1>
 
-            <div class="gameShop" id="Shop">
-                <button id="myPets" class="shop-button" onclick="window.location.href='my-pets.html'">My pets</button>
+            <div class="header-btn-container">
+                <div class="gameShop" id="BackToCabinet">
+                    <button id="myPets"
+                            class="shop-button"
+                            onclick="window.location.href='my-pets.html'"
+                            title="Back to my-pets">
+                        <i class="fa-solid fa-paw"></i>
+                    </button>
+                </div>
+                <div class="gameShop" id="Shop">
+                    <button id="openShopBtn" class="shop-button" title="Back to shop">🛒</button>
+                </div>
             </div>
         </div>
     </div>
-    <div class="petContainer-section">
-        <div id="selectPetContainer" class=""></div>
+    <div class="dashboard-pet-wrapper">
+        <div class="loader" id="avatarLoader"></div>
+        <div class="dashboard-pet non-display" id="dashboard">
+
+            <div class="dashboard-pet-row1">
+                <img id="selectedPetImage" class="imgLogoBig" />
+                <div class="dashboard-pet-info-container">
+                    <h3 class="medium-text">Имя: <span id="petName" class="big-text text-decoratoin"></span></h3>
+                    <h3 class="medium-text">❤️ Здоровье: <span id="petHealth" class="small-text"></span></h3>
+                    <h3 class="medium-text">🕒 Последнее кормление: <span id="petLastFed" class="small-text"></span></h3>
+                    <h3 class="medium-text">⭐ Опыт: <span id="petExperience" class="small-text"></span></h3>
+                    <h3 class="medium-text">🐣 Возраст: <span id="petAge" class="small-text"></span></h3>
+                    <h3 class="medium-text">📋 Статус: <span id="petStatus" class="small-text"></span></h3>
+                </div>
+            </div>
+            <button id="feedPetBtn" class="button-big">Кормить питомца</button>
+        </div>
     </div>
 
 
-        <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
-        <script src="app.js"></script>
-        <script src="appDesign.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.8.1/dist/ethers.umd.min.js"></script>
+    <script src="app.js"></script>
+    <script src="appDesign.js"></script>
 </body>
 </html>
