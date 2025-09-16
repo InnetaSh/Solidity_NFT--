@@ -492,10 +492,10 @@
                     card.classList.add("pet-card");
                     card.dataset.tokenId = tokenId;
 
-                    const age = metadata.attributes.find(attr => attr.trait_type === "Age")?.value ?? '—';
-                    const health = metadata.attributes.find(attr => attr.trait_type === "Health")?.value ?? '—';
-                    const experience = metadata.attributes.find(attr => attr.trait_type === "Experience")?.value ?? '—';
-
+                    age = metadata.attributes.find(attr => attr.trait_type === "Age")?.value ?? '—';
+                    health = metadata.attributes.find(attr => attr.trait_type === "Health")?.value ?? '—';
+                    experience = metadata.attributes.find(attr => attr.trait_type === "Experience")?.value ?? '—';
+                    console.log(`Pet ${tokenId} - Age: ${age}, Health: ${health}, Experience: ${experience}`);
                    
                     card.innerHTML = `
                         <div class="pet-card-item">
@@ -594,11 +594,54 @@
             const tx = await contract.feedPet(tokenId);
             await tx.wait();
 
+            petName = await contract.getName(tokenId);
             health = await contract.getHealth(tokenId);
             experience = await contract.getPetExperience(tokenId);
+            age = await contract.getAge(tokenId);
             alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}`);
+
+            const chosenImage = petImages[tokenId-1][age];
+            
+            console.log(`Pet ${tokenId} - Age: ${age}, Health: ${health}, Experience: ${experience}`);
+
+
+            const newMetadata = {
+                name: petName,
+                description: `This is ${petName}, your new NFT pet!`,
+                image: chosenImage,
+                attributes: [
+                    { trait_type: "Age", value: Number(age) },
+                    { trait_type: "Health", value: Number(health) },
+                    { trait_type: "Experience", value: Number(experience) }
+                ]
+            };
+
+
+            const tokenURI = await uploadMetadataToPinata(newMetadata); 
+            console.log("New Token URI:", tokenURI);
+            await contract.updateTokenURI(tokenId, tokenURI);
+
             const totalExperience = await contract.getPetExperience(tokenId);
             if (experienceEl) experienceEl.textContent = ` ${totalExperience}`;
+
+            const timestamp = Date.now();
+            const date = new Date(timestamp); 
+
+            const formatted = date.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            if (lastFed) {
+                lastFedEl.textContent = `Последнее кормление: ${formatted}`;
+                console.log("Last fed updated:", formatted);
+            }
+
+           await updatePetStats();
         }
         catch (e) {
             let errorMessage = "Ошибка при кормлении питомца.";
@@ -684,10 +727,22 @@
             age = petAge;
             status = petStatus === 0 ? "Active" : "Dead";
 
+
+            const timestamp = Number(lastFed); 
+            const date = new Date(timestamp * 1000);
+
+            const formatted = date.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
             
             if (nameEl) nameEl.textContent = name;
             if (healthEl) healthEl.textContent = `Здоровье: ${health}`;
-            if (lastFed) lastFedEl.textContent = `Последнее кормление: ${lastFed}`;
+            if (lastFed) lastFedEl.textContent = `Последнее кормление: ${formatted}`;
             if (experienceEl) experienceEl.textContent = `Опыт: ${experience}`;
             if (ageEl) ageEl.textContent = `Возраст: ${age}`;
             if (statusEl) statusEl.textContent = `Статус: ${status}`;
@@ -798,13 +853,26 @@
 
         try {
             const [name, health, lastFed, experience, age, status] = await getPetStatus(tokenId);
+
+            const timestamp = Number(lastFed);
+            const date = new Date(timestamp * 1000);
+
+            const formatted = date.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
             const tokenURI = await contract.tokenURI(tokenId);
             const response = await fetch(tokenURI);
             const metadata = await response.json();
             
             if (nameEl) nameEl.textContent = name;
             if (healthEl) healthEl.textContent = ` ${health}`;
-            if (lastFedEl) lastFedEl.textContent = ` ${lastFed}`;
+            if (lastFedEl) lastFedEl.textContent = ` ${formatted}`;
             if (experienceEl) experienceEl.textContent = ` ${experience}`;
             if (ageEl) ageEl.textContent = ` ${age}`;
             if (statusEl) statusEl.textContent = ` ${status}`;
@@ -940,7 +1008,7 @@
         }
         */
         
-        //setInterval(updatePetStats, 3 * 60 * 1000);
+        setInterval(updatePetStats, 3 * 60 * 1000);
     };
  
 })();

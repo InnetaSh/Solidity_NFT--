@@ -208,23 +208,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
         delete pets[tokenId];
     }
 
-    function getPetStatus(uint tokenId) public view returns (
-        string memory name,
-        uint health,
-        uint lastFed,
-        uint experience,
-        uint age,
-        PetState state
-    ) {
-        Pet memory pet = pets[tokenId];
-        uint currentHealth = getHealth(tokenId);
-
-        if (currentHealth == 0 && pet.state != PetState.Dead) {
-            return (pet.name, 0, pet.lastFed, pet.experience, pet.age, PetState.Dead);
-        }
-
-        return (pet.name, currentHealth, pet.lastFed, pet.experience, pet.age, pet.state);
-    }
+  сейчас взять
 
     function setPET_PRICE(uint _price) public onlyOwner {
         PET_PRICE = _price;
