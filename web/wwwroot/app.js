@@ -75,6 +75,13 @@
     let petPrice = "0.01";                                             // цена питомца !
     let petBonusFeedPrice = "0";                                    // цена бонусного кормления питомца !
 
+    const statePet = {
+        "0": "Active",
+        "1": "Dead"
+    };
+
+
+
     let currentlySelectedCard = null;
 
     const petImagesAge_0 = [
@@ -233,7 +240,7 @@
     }
 
     async function getPet() {            // функция - получение питомца
-        petName = inputPetName.value.trim();
+        const petName = inputPetName.value.trim();
        
         if (!petName) {
             alert("Введите имя питомца.");
@@ -318,6 +325,7 @@
             alert(`🎉 Вы успешно завели питомца по имени ${petName}!`);
 
             await loadMyPets();
+            window.location.href = "my-pets.html";
         } catch (e) {
             console.error("Ошибка при создании питомца:", e);
             alert("Ошибка: " + (e.message || e));
@@ -354,7 +362,8 @@
                 attributes: [
                     { trait_type: "Age", value: 0 },
                     { trait_type: "Health", value: 100 },
-                    { trait_type: "Experience", value: 0 }
+                    { trait_type: "Experience", value: 0 },
+                    { trait_type: "Status", value: 0 }
                 ]
             };
 
@@ -495,6 +504,9 @@
                     age = metadata.attributes.find(attr => attr.trait_type === "Age")?.value ?? '—';
                     health = metadata.attributes.find(attr => attr.trait_type === "Health")?.value ?? '—';
                     experience = metadata.attributes.find(attr => attr.trait_type === "Experience")?.value ?? '—';
+                    
+                    const statusValue = metadata.attributes.find(attr => attr.trait_type === "Status")?.value;
+                    const status = statePet[statusValue] || "—";
                     console.log(`Pet ${tokenId} - Age: ${age}, Health: ${health}, Experience: ${experience}`);
                    
                     card.innerHTML = `
@@ -598,11 +610,12 @@
             health = await contract.getHealth(tokenId);
             experience = await contract.getPetExperience(tokenId);
             age = await contract.getAge(tokenId);
-            alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}`);
+            status = await contract.getPetState(tokenId);
+            alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
 
             const chosenImage = petImages[tokenId-1][age];
             
-            console.log(`Pet ${tokenId} - Age: ${age}, Health: ${health}, Experience: ${experience}`);
+            console.log(`Pet ${tokenId} - Age: ${age}, Health: ${health}, Experience: ${experience}\nstatus: ${status}`);
 
 
             const newMetadata = {
@@ -612,7 +625,8 @@
                 attributes: [
                     { trait_type: "Age", value: Number(age) },
                     { trait_type: "Health", value: Number(health) },
-                    { trait_type: "Experience", value: Number(experience) }
+                    { trait_type: "Experience", value: Number(experience) },
+                    { trait_type: "Status", value: Number(status) }
                 ]
             };
 
@@ -637,7 +651,7 @@
             });
             
             if (lastFed) {
-                lastFedEl.textContent = `Последнее кормление: ${formatted}`;
+                lastFedEl.textContent = ` ${formatted}`;
                 console.log("Last fed updated:", formatted);
             }
 
@@ -646,7 +660,7 @@
         catch (e) {
             let errorMessage = "Ошибка при кормлении питомца.";
 
-            // Если Metamask вернул сообщение из require
+            
             const revertReason =
                 e?.error?.reason ||
                 e?.error?.revert?.args?.[0] ||
@@ -718,7 +732,7 @@
 
             
             const [petName, petHealth, petLastFed, petExperience, petAge, petStatus] = await contract.getPetStatus(selectedTokenId);
-            
+            petStatus = await contract.getPetState(tokenId);
 
             name = petName;
             health = petHealth;
@@ -852,7 +866,17 @@
         }
 
         try {
-            const [name, health, lastFed, experience, age, status] = await getPetStatus(tokenId);
+            //debugger;
+            [name, health, lastFed, experience, age, status] = await getPetStatus(tokenId);
+            
+            petStatus = await contract.getPetState(tokenId);
+            status = petStatus === 0n ? "Active" : "Dead";
+            id(petStatus != 0n){
+                feedPetBtn.classList.add('non-display');
+                sellPetBtn.classList.add('non-display');
+                feedPetBonusBtn.classList.add('non-display');
+            }
+            console.log(`Pet ${tokenId} - Name: ${name}, Age: ${age}, Health: ${health}, Experience: ${experience}, Status: ${petStatus}`);
 
             const timestamp = Number(lastFed);
             const date = new Date(timestamp * 1000);
