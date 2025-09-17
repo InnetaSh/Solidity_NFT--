@@ -701,8 +701,9 @@
         }
 
         try {
-
-            const tx = await contract.feedPetBonus(tokenId, { value: petBonusFeedPrice });
+            const value = ethers.parseEther(petPrice);
+            console.log("Sending bonus feed with value:", value);
+            const tx = await contract.feedPetBonus(tokenId, { value: value });
 
             await tx.wait();
 
@@ -714,6 +715,38 @@
             alert(`🐾 Вы покормили питомца бонусом!\nЗдоровье: ${health}\nОпыт: ${experience}`);
         } catch (e) {
             alert("Ошибка при бонусном кормлении: " + e.message);
+            let errorMessage = "Ошибка при бонусном кормлении питомца.";
+
+
+            const revertReason =
+                e?.error?.reason ||
+                e?.error?.revert?.args?.[0] ||
+                e?.reason ||
+                e?.revert?.args?.[0];
+
+            if (revertReason) {
+                if (revertReason.includes("Too early to feed again")) {
+                    errorMessage = "⏳ Питомца можно кормить не чаще, чем раз в 5 минут!";
+                } else if (revertReason.includes("Pet is not active")) {
+                    errorMessage = "💀 Питомец мёртв или неактивен. Возродите его.";
+                } else {
+                    errorMessage = "⚠️ " + revertReason;
+                }
+            } else if (e?.message) {
+                errorMessage = "⚠️ " + e.message;
+            }
+
+            if (feedErrorEl) {
+                feedErrorEl.textContent = errorMessage;
+                feedErrorEl.classList.add("error-message");
+
+                setTimeout(() => {
+                    feedErrorEl.classList.add("hidden");
+                }, 5000);
+
+
+                feedErrorEl.classList.remove("hidden");
+            }
         }
     }
 
@@ -871,11 +904,13 @@
             
             petStatus = await contract.getPetState(tokenId);
             status = petStatus === 0n ? "Active" : "Dead";
-            id(petStatus != 0n){
+            if(petStatus != 0n){
                 feedPetBtn.classList.add('non-display');
                 sellPetBtn.classList.add('non-display');
                 feedPetBonusBtn.classList.add('non-display');
+                burnPetBtn.classList.remove('non-display');
             }
+            
             console.log(`Pet ${tokenId} - Name: ${name}, Age: ${age}, Health: ${health}, Experience: ${experience}, Status: ${petStatus}`);
 
             const timestamp = Number(lastFed);

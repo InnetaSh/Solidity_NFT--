@@ -297,7 +297,7 @@ button:active {
     position:absolute;
     right: 10%;
     top:0;
-
+    gap:10px;
 }
 /*============================
         SHOP-CARD  STYLES

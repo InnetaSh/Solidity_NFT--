@@ -174,7 +174,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
         emit PetFed(tokenId, pet.health);
 
         if(msg.value > BONUS_FEED_PRICE) {
-            payable(msg.sender).transfer(msg.value - BONUS_FEED_PRICE);
+           
         }
     }
     
