@@ -72,7 +72,7 @@
     let tokenId;
 
     let name, health, lastFed, experience, age, status;
-    let petPrice = "0.01";                                             // цена питомца !
+    let petPrice = "0";                                             // цена питомца !
     let petBonusFeedPrice = "0";                                    // цена бонусного кормления питомца !
 
     const statePet = {
@@ -328,7 +328,7 @@
             window.location.href = "my-pets.html";
         } catch (e) {
             console.error("Ошибка при создании питомца:", e);
-            alert("Ошибка: " + (e.message || e));
+            console.log("Ошибка: " + (e.message || e));
         }
     }
 
@@ -444,7 +444,7 @@
 
 
     function selectImage(index) {
-        chosenImage = petImages[index][0];
+        chosenImage = petImages[index+1][0];
         localStorage.setItem("chosenImage", chosenImage);
         console.log("Выбрана картинка:", chosenImage);
     }
@@ -849,7 +849,8 @@
                     throw new Error("Контракт не инициализирован");
                 }
 
-                const price = await contract.getPET_PRICE();
+            const price = await contract.getPET_PRICE();
+            console.log("price:", price);
                 return ethers.formatEther(price); 
             } catch (err) {
                 console.error("Ошибка получения цены питомца:", err);
@@ -864,7 +865,8 @@
                     throw new Error("Контракт не инициализирован");
                 }
 
-                const price = await contract.getBONUS_FEED_PRICE();
+            const price = await contract.getBONUS_FEED_PRICE();
+            console.log("price:", price);
                 return ethers.formatEther(price); 
         } catch (e) {
             alert("Ошибка при получении цены бонусного кормления: " + e.message);
@@ -972,7 +974,7 @@
 
         if (path.endsWith("shop.html")) {
             const containerShop = document.getElementById("choisePet");
-            const petPrice = 0.01; 
+            
 
             const imageKeys = [
                 "shopImage1",

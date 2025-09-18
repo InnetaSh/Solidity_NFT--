@@ -43,26 +43,52 @@ body {
     width: 100%;
     box-sizing: border-box;
     background: var(--color-bg-light);
+   
 }
 .main {
     font-family: 'Comic Neue', cursive, Arial, sans-serif;
     background: linear-gradient(135deg, var(--color-bg-gradient-start), var(--color-bg-gradient-end));
     width: 80%;
+   
     margin: 30px auto;
     padding: 20px;
     border-radius: 25px;
     box-shadow: 0 15px 30px rgba(0,0,0,0.25);
     color: var(--color-text-main);
+    position: relative;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
 }
-
-h1 {
-    text-align: center;
-    font-size: 2.5rem;
-    color: var(--color-text-header);
-    text-shadow: 2px 2px 5px var(--color-text-shadow-header);
-    margin-bottom: 15px;
+.main-index {
+    max-width: 1024px !important;
 }
+    h1 {
+        text-align: center;
+        font-size: 2.5rem;
+        color: var(--color-text-header);
+        text-shadow: 2px 2px 5px var(--color-text-shadow-header);
+        margin-bottom: 15px;
+    }
 
+.gameInfo-index {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height:75vh;
+}
+.intro-index {
+    background: var(--color-intro-bg);
+    border-radius: 20px;
+    padding: 18px 22px;
+    box-shadow: inset 0 0 15px var(--color-intro-border-shadow);
+    color: var(--color-intro-text);
+    font-size: 1.05rem;
+    line-height: 1.4;
+    margin-bottom: 25px;
+    width: 60%;
+}
 .gameInfo {
     display: flex;
     flex-direction: column;
@@ -81,16 +107,52 @@ h1 {
 }
 
 
+.petLogo-left {
+    position: absolute;
+    top: 30px;
+    left:-16%;
+    width: 100%;
+    height: auto;
+   
+}
+
+.petLogo-right {
+    position: absolute;
+    top: 300px;
+    right: -10%;
+    width: 100%;
+    height: auto;
+}
+
+@media (min-width: 1000px) {
+    .petLogo-right {
+        top: 120px !important;
+    }
+}
+@media (min-width: 920px) {
+    .petLogo-right {
+        top: 220px;
+    }
+}
+
+
+.btn-index-container{
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+    width:80%;
+    z-index:2;
+}
 /*==========================================
                  FORM STYLES
 ============================================*/
-
-
-.petForm{
+.petForm {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width:80%;
+    width: 80%;
 }
 
 
@@ -306,6 +368,7 @@ button:active {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width:80%;
 }
 
 
