@@ -14,6 +14,7 @@
 
     const petPriceEl = document.getElementById("petPrice");
     const petBonusFeedPriceEl = document.getElementById("petBonusFeedPrice");
+    const petImageEl = document.getElementById("selectedPetImage");
 
     const getPetBtn = document.getElementById('getPetBtn');  //кнопка получить питомца при первом заходе на сайт
     const openShopBtn = document.getElementById('openShopBtn');  //кнопка открыть магазин питомцев
@@ -22,11 +23,16 @@
     const feedPetBtn = document.getElementById('feedPetBtn');  //кнопка кормить питомца
     const feedPetBonusBtn = document.getElementById('feedPetBonusBtn');  //кнопка кормить питомца бонусом
     const sellPetBtn = document.getElementById('sellPetBtn');  //кнопка продать питомца
+    const showSellPetBtn = document.getElementById('showSellPetBtn');  //кнопка показать форму продажи питомца
+    const closeSellPetBtn = document.getElementById('closeSellPetBtn');  //кнопка закрыть форму продажи питомца
     const burnDeadPetBtn = document.getElementById('burnDeadPetBtn');  //кнопка сжечь мертвого питомца
 
 
     const inputPetName = document.getElementById('inputPetName');
     const inputPetNameBye = document.getElementById('inputPetNameBye');
+    const petFormSellSection = document.getElementById('petFormSellSection');
+    const inputSellAddress = document.getElementById('inputSellAddress');
+    const inputSellPrice = document.getElementById('inputSellPrice');
 
 
 
@@ -53,13 +59,32 @@
     if (feedPetBonusBtn) {
         feedPetBonusBtn.addEventListener('click', feedPetBonus);
     }
-    /*
-    sellPetBtn.addEventListener('click', sellPet);
-    burnDeadPetBtn.addEventListener('click', burnDeadPet);*/
+    if (sellPetBtn) {
+        sellPetBtn.addEventListener('click', sellPet);
+    }
+    if (showSellPetBtn && petFormSellSection) {
+        showSellPetBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            petFormSellSection.classList.remove('non-display');
+            feedPetBtn.classList.add('non-display');
+        });
+    }
+
+    if (closeSellPetBtn) {
+        closeSellPetBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            petFormSellSection.classList.add('non-display');
+            feedPetBtn.classList.remove('non-display');
+        });
+    }
+
+    if (burnDeadPetBtn) {
+        burnDeadPetBtn.addEventListener('click', burnDeadPet);
+    }
 
 
 
-    let provider, signer, contract, cfg;
+    let provider, signer, contract, cfg, address;
     let isConnecting = false;
    // const pinataApiKey = "5fa105b1702db3a70bdb";                           
    // const pinataSecretApiKey = "5b403cce9f748764c813c476ba7e79c936ff2d97153b3b2f866dd6c463c7e85a";
@@ -79,6 +104,20 @@
         "0": "Active",
         "1": "Dead"
     };
+
+    const timestamp = Date.now();
+    const date = new Date(timestamp); 
+
+    const formatted = date.toLocaleString('ru-RU', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+
+
 
 
 
@@ -182,6 +221,7 @@
             provider = new ethers.BrowserProvider(window.ethereum);
             await provider.send("eth_requestAccounts", []);
             signer = await provider.getSigner();
+            address = await signer.getAddress();
             contract = new ethers.Contract(cfg.address, cfg.abi, signer);
 
             /*tokenIds = await contract.getMyPets();
@@ -240,6 +280,8 @@
     }
 
     async function getPet() {            // функция - получение питомца
+        await loadConfig(); 
+        await connect();
         const petName = inputPetName.value.trim();
        
         if (!petName) {
@@ -289,43 +331,18 @@
             console.log("Транзакция подтверждена", receipt);
             console.log("Логи транзакции:", receipt.logs);
 
+           
 
-            //const iface = new ethers.Interface(abi);
-            for (const log of receipt.logs) {
-                try {
-                    const parsed = iface.parseLog(log);
-                    if (parsed.name === "PetCreated") {
-                        console.log("Parsed событие:", parsed);
-                        tokenId = parsed.args.tokenId.toString();
-                       
-                        break;
-                    }
-                } catch (err) {
-                    
-                }
-            }
+            const tokenId = await contract.getLastPetId(address);
+            console.log(`🐶 Питомец создан! ID: ${tokenId}`);
 
-            if (!tokenId) {
-                console.error("Событие 'PetCreated' не найдено в логах транзакции.");
-                alert("Питомец создан, но событие 'PetCreated' не получено.");
-                return;
-            }
-
-            selectedTokenId = tokenId;
-            
-            console.log("tokenId:", tokenId);
-            selectedTokenId = tokenId;
-
-            name = petName;
-            health = 100;
-            experience = 0;
-            age = 0;
-            status = "Active";
-            console.log(`Pet created with Token ID: ${tokenId}`);
-            alert(`🎉 Вы успешно завели питомца по имени ${petName}!`);
-
-            await loadMyPets();
-            window.location.href = "my-pets.html";
+            alert(`🎉 Вы успешно завели питомца по имени ${petName}!\nToken ID: ${tokenId}`);
+          
+           
+            setTimeout(() => {
+                window.location.href = 'my-pets.html';
+            }, 100);
+           
         } catch (e) {
             console.error("Ошибка при создании питомца:", e);
             console.log("Ошибка: " + (e.message || e));
@@ -597,6 +614,15 @@
     }
 
 
+    const findImageGroupIndex = (images, target) => {
+        for (let i = 0; i < images.length; i++) {
+            if (images[i].includes(target)) {
+                return i;                       // индекс подмассива
+            }
+        }
+        return -1; 
+    };
+
     async function feedPet() {
         if (!tokenId) {
             alert("Сначала выберите питомца.");
@@ -613,7 +639,29 @@
             status = await contract.getPetState(tokenId);
             alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
 
-            const chosenImage = petImages[tokenId-1][age];
+
+            let tokenURI = await contract.tokenURI(tokenId);
+            let response = await fetch(tokenURI);
+            let metadata = await response.json();
+
+            const imageToFind = metadata.image;
+            console.log("Image URL:", imageToFind);
+
+            const groupIndex = findImageGroupIndex(petImages, imageToFind);
+
+            if (groupIndex !== -1) {
+                console.log(`Изображение найдено в подмассиве №${groupIndex}`);
+            } else {
+                console.log("Изображение не найдено в массиве.");
+            }
+
+
+            const chosenImage = petImages[groupIndex][age];
+            if (petImageEl) {
+                petImageEl.src = chosenImage;
+                petImageEl.alt = petName;
+            }
+
             
             console.log(`Pet ${tokenId} - Age: ${age}, Health: ${health}, Experience: ${experience}\nstatus: ${status}`);
 
@@ -631,25 +679,16 @@
             };
 
 
-            const tokenURI = await uploadMetadataToPinata(newMetadata); 
-            console.log("New Token URI:", tokenURI);
-            await contract.updateTokenURI(tokenId, tokenURI);
+            let newTokenURI = await uploadMetadataToPinata(newMetadata); 
+            console.log("New Token URI:", newTokenURI);
+            await contract.updateTokenURI(tokenId, newTokenURI);
 
-            const totalExperience = await contract.getPetExperience(tokenId);
+            let totalExperience = await contract.getPetExperience(tokenId);
             if (experienceEl) experienceEl.textContent = ` ${totalExperience}`;
 
-            const timestamp = Date.now();
-            const date = new Date(timestamp); 
 
-            const formatted = date.toLocaleString('ru-RU', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            
+
+           
             if (lastFed) {
                 lastFedEl.textContent = ` ${formatted}`;
                 console.log("Last fed updated:", formatted);
@@ -669,7 +708,7 @@
 
             if (revertReason) {
                 if (revertReason.includes("Too early to feed again")) {
-                    errorMessage = "⏳ Питомца можно кормить не чаще, чем раз в 5 минут!";
+                    errorMessage = "⏳ Питомца можно кормить не чаще, чем раз в 2 минуты!";
                 } else if (revertReason.includes("Pet is not active")) {
                     errorMessage = "💀 Питомец мёртв или неактивен. Возродите его.";
                 } else {
@@ -701,18 +740,77 @@
         }
 
         try {
-            const value = ethers.parseEther(petPrice);
+            let value = ethers.parseEther(petPrice);
             console.log("Sending bonus feed with value:", value);
             const tx = await contract.feedPetBonus(tokenId, { value: value });
 
             await tx.wait();
 
-            const health = await contract.getHealth(tokenId);
-            const experience = await contract.getPetExperience(tokenId); 
+            petName = await contract.getName(tokenId);
+            health = await contract.getHealth(tokenId);
+            experience = await contract.getPetExperience(tokenId);
+            age = await contract.getAge(tokenId);
+            status = await contract.getPetState(tokenId);
+            alert(`🐾Вы покормили питомца бонусом!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
+
+            let tokenURI = await contract.tokenURI(tokenId);
+            let response = await fetch(tokenURI);
+            let metadata = await response.json();
+
+            const imageToFind = metadata.image;
+            console.log("Image URL:", imageToFind);
+
+            const groupIndex = findImageGroupIndex(petImages, imageToFind);
+
+            if (groupIndex !== -1) {
+                console.log(`Изображение найдено в подмассиве №${groupIndex}`);
+            } else {
+                console.log("Изображение не найдено в массиве.");
+            }
+
+
+            const chosenImage = petImages[groupIndex][age];
+            petImageEl = document.getElementById("selectedPetImage");
+            if (petImageEl) {
+                petImageEl.src = chosenImage;
+                petImageEl.alt = name;
+            }
+
+            console.log(`Pet ${tokenId} - Age: ${age}, Health: ${health}, Experience: ${experience}\nstatus: ${status}`);
+
+
+            const newMetadata = {
+                name: petName,
+                description: `This is ${petName}, your new NFT pet!`,
+                image: chosenImage,
+                attributes: [
+                    { trait_type: "Age", value: Number(age) },
+                    { trait_type: "Health", value: Number(health) },
+                    { trait_type: "Experience", value: Number(experience) },
+                    { trait_type: "Status", value: Number(status) }
+                ]
+            };
+
+
+            let newTokenURI = await uploadMetadataToPinata(newMetadata);
+            console.log("New Token URI:", newTokenURI);
+            await contract.updateTokenURI(tokenId, newTokenURI);
+
+            const totalExperience = await contract.getPetExperience(tokenId);
+            if (experienceEl) experienceEl.textContent = ` ${totalExperience}`;
 
 
 
-            alert(`🐾 Вы покормили питомца бонусом!\nЗдоровье: ${health}\nОпыт: ${experience}`);
+
+
+            if (lastFed) {
+                lastFedEl.textContent = ` ${formatted}`;
+                console.log("Last fed updated:", formatted);
+            }
+
+            await updatePetStats();
+
+            
         } catch (e) {
             alert("Ошибка при бонусном кормлении: " + e.message);
             let errorMessage = "Ошибка при бонусном кормлении питомца.";
@@ -753,39 +851,34 @@
 
 
     async function updatePetStats() {                       // функция - обновление состояния питомца (здоровье и опыт) каждые 3 минуты
-        if (!selectedTokenId) return;
 
+        if (!tokenId) return;
+        console.log("updatePetStats begin");
         try {
-            await contract.decayExperience(selectedTokenId);
+            await contract.decayExperience(tokenId);
             
-            health = await contract.getHealth(selectedTokenId);
-            experience = await contract.getPetExperience(selectedTokenId);
+            health = await contract.getHealth(tokenId);
+            experience = await contract.getPetExperience(tokenId);
 
             console.log(`🔁 Обновление данных: здоровье: ${health}, опыт: ${experience}`);
 
-            
-            const [petName, petHealth, petLastFed, petExperience, petAge, petStatus] = await contract.getPetStatus(selectedTokenId);
+            const result = await contract.getPetStatus(tokenId);
+            console.log("PetStatus raw:", result);
+            //const [petName, petHealth, petLastFed, petExperience, petAge, petStatus] = await contract.getPetStatus(tokenId);
             petStatus = await contract.getPetState(tokenId);
 
-            name = petName;
-            health = petHealth;
-            lastFed = petLastFed;
-            experience = petExperience;
-            age = petAge;
+            name = await contract.getName(tokenId);
+           // health = petHealth;
+           // lastFed = petLastFed;
+            //experience = petExperience;
+            age = await contract.getAge(tokenId);;
             status = petStatus === 0 ? "Active" : "Dead";
 
+            console.log(`🔁 Обновление данных ${name}: здоровье: ${health}, опыт: ${experience},status:${status} `);
 
-            const timestamp = Number(lastFed); 
-            const date = new Date(timestamp * 1000);
 
-            const formatted = date.toLocaleString('ru-RU', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
+            console.log("updatePetStats update");
+            
             
             if (nameEl) nameEl.textContent = name;
             if (healthEl) healthEl.textContent = `Здоровье: ${health}`;
@@ -793,6 +886,7 @@
             if (experienceEl) experienceEl.textContent = `Опыт: ${experience}`;
             if (ageEl) ageEl.textContent = `Возраст: ${age}`;
             if (statusEl) statusEl.textContent = `Статус: ${status}`;
+            console.log("updatePetStats end");
         } catch (e) {
             console.error("Ошибка при обновлении состояния питомца:", e.message);
         }
@@ -801,26 +895,31 @@
 
    
     async function sellPet() {                     // Продать питомца другому адресу
-        if (!selected
-        ) {
-            alert("Сначала выберите питомца.");
-            return;
+         
+            const toAddress = inputSellAddress.value.trim();
+            const value = inputSellPrice.value.trim();
+            const price = value ? ethers.parseEther(value) : ethers.parseEther(petPrice);
+            
+            if (!toAddress || !ethers.utils.isAddress(toAddress)) {
+                alert("Неверный адрес Ethereum-кошелька.");
+                return;
+            }
+
+            try {
+                const tx = await contract.sellPet(selectedTokenId, toAddress);
+                await tx.wait();
+
+                alert("Питомец успешно продан!");
+
+                
+                inputSellAddress.value = "";
+                await loadMyPets();
+            } catch (e) {
+                console.error("Ошибка при продаже:", e);
+                alert("Ошибка при продаже: " + (e?.message || "Неизвестная ошибка"));
+            }
         }
-        const toAddress = prompt("Введите адрес покупателя:");
-        if (!toAddress || !ethers.utils.isAddress(toAddress)) {
-            alert("Неверный адрес");
-            return;
-        }
-        try {
-            const tx = await contract.sellPet(selectedTokenId, toAddress);
-            await tx.wait();
-            alert("Питомец продан!");
-           
-            await loadMyPets();
-        } catch (e) {
-            alert("Ошибка при продаже: " + e.message);
-        }
-    }
+
 
     
     async function burnDeadPet() {              // Сжечь мертвого питомца
@@ -915,17 +1014,9 @@
             
             console.log(`Pet ${tokenId} - Name: ${name}, Age: ${age}, Health: ${health}, Experience: ${experience}, Status: ${petStatus}`);
 
-            const timestamp = Number(lastFed);
-            const date = new Date(timestamp * 1000);
 
-            const formatted = date.toLocaleString('ru-RU', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
+
+           
 
             const tokenURI = await contract.tokenURI(tokenId);
             const response = await fetch(tokenURI);
@@ -1056,7 +1147,7 @@
 
         await loadMyPets();
         petPrice = await getPET_PRICE();
-        //petBonusFeedPrice = await getBONUS_FEED_PRICE();
+        petBonusFeedPrice = await getBONUS_FEED_PRICE();
 
         if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${ethers.formatEther(petPrice)} ETH`;
        // if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
@@ -1069,7 +1160,7 @@
         }
         */
         
-        setInterval(updatePetStats, 3 * 60 * 1000);
+        //setInterval(updatePetStats, 3 * 60 * 1000);
     };
  
 })();

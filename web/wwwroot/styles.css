@@ -156,7 +156,7 @@ body {
 }
 
 
-input[type="text"], select {
+input, select {
     width: 50%;
     padding: 12px 15px;
     font-size: 1.1rem;
@@ -168,7 +168,7 @@ input[type="text"], select {
     transition: 0.3s;
 }
 
-    input[type="text"]:focus, select:focus {
+    input:focus, select:focus {
         border-color: var(--color-input-border-focus);
         box-shadow: 0 6px 12px var(--color-input-shadow-focus);
         background: #fff7d9;
@@ -191,14 +191,33 @@ input[type="file"] {
         background: var(--color-input-bg-hover);
     }
 
+#petFormSellSection{
+    width:100%;
+    position:relative;
+}
 
+.close-btn {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.3s ease;
+}
 
+    .close-btn:hover {
+        color: #e00;
+    }
 
-
+.inputSell {
+    width: 80% !important;
+}
 /*============================
         TEXT STYLES
  =============================== */
-
 .small-text {
     font-weight: 700;
     font-size: 1rem;
@@ -414,6 +433,7 @@ button:active {
 
 .pet-card {
     width: 90%;
+    min-width: 50%;
     margin-left: 5%;
     margin-top: 30px;
     background: var(--color-intro-bg);
@@ -424,17 +444,17 @@ button:active {
     font-size: 1.05rem;
     line-height: 1.4;
     display: flex;
-    flex-direction:column;
-    justify-content:space-between;
-    align-items:center;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
 }
 
 
-.pet-card-item{
-    display:flex;
-    width:auto;
-    min-height:200px;
-    position:relative;
+.pet-card-item {
+    display: flex;
+    width: auto;
+    min-height: 200px;
+    position: relative;
 }
 
 
@@ -481,6 +501,7 @@ button:active {
     margin-top: 20px;
     position: relative;
     margin-top: 20px;
+    min-height:500px;
 }
 
 .dashboard-pet{

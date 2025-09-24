@@ -1,5 +1,5 @@
 {
-  "address": "0xCD8a1C3ba11CF5ECfa6267617243239504a98d90",
+  "address": "0xE3011A37A904aB90C8881a99BD1F6E21401f1522",
   "abi": [
     {
       "inputs": [],
@@ -477,6 +477,25 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "getLastPetId",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "getMyPets",
       "outputs": [
@@ -613,7 +632,7 @@
           "type": "uint256"
         },
         {
-          "internalType": "enum NFTPet.PetState",
+          "internalType": "uint8",
           "name": "state",
           "type": "uint8"
         }
@@ -659,7 +678,13 @@
         }
       ],
       "name": "mintPet",
-      "outputs": [],
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
       "stateMutability": "nonpayable",
       "type": "function"
     },
