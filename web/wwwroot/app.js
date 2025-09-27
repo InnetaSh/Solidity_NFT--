@@ -632,69 +632,13 @@
             const tx = await contract.feedPet(tokenId);
             await tx.wait();
 
-            petName = await contract.getName(tokenId);
-            health = await contract.getHealth(tokenId);
-            experience = await contract.getPetExperience(tokenId);
-            age = await contract.getAge(tokenId);
-            status = await contract.getPetState(tokenId);
-            alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
-
-
-            let tokenURI = await contract.tokenURI(tokenId);
-            let response = await fetch(tokenURI);
-            let metadata = await response.json();
-
-            const imageToFind = metadata.image;
-            console.log("Image URL:", imageToFind);
-
-            const groupIndex = findImageGroupIndex(petImages, imageToFind);
-
-            if (groupIndex !== -1) {
-                console.log(`Изображение найдено в подмассиве №${groupIndex}`);
-            } else {
-                console.log("Изображение не найдено в массиве.");
-            }
-
-
-            const chosenImage = petImages[groupIndex][age];
-            if (petImageEl) {
-                petImageEl.src = chosenImage;
-                petImageEl.alt = petName;
-            }
-
+          
             
-            console.log(`Pet ${tokenId} - Age: ${age}, Health: ${health}, Experience: ${experience}\nstatus: ${status}`);
-
-
-            const newMetadata = {
-                name: petName,
-                description: `This is ${petName}, your new NFT pet!`,
-                image: chosenImage,
-                attributes: [
-                    { trait_type: "Age", value: Number(age) },
-                    { trait_type: "Health", value: Number(health) },
-                    { trait_type: "Experience", value: Number(experience) },
-                    { trait_type: "Status", value: Number(status) }
-                ]
-            };
-
-
-            let newTokenURI = await uploadMetadataToPinata(newMetadata); 
-            console.log("New Token URI:", newTokenURI);
-            await contract.updateTokenURI(tokenId, newTokenURI);
-
-            let totalExperience = await contract.getPetExperience(tokenId);
-            if (experienceEl) experienceEl.textContent = ` ${totalExperience}`;
-
 
 
            
-            if (lastFed) {
-                lastFedEl.textContent = ` ${formatted}`;
-                console.log("Last fed updated:", formatted);
-            }
-
-           await updatePetStats();
+            const flag = false;
+            await updatePetStats(flag);
         }
         catch (e) {
             let errorMessage = "Ошибка при кормлении питомца.";
@@ -751,64 +695,11 @@
             experience = await contract.getPetExperience(tokenId);
             age = await contract.getAge(tokenId);
             status = await contract.getPetState(tokenId);
-            alert(`🐾Вы покормили питомца бонусом!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
+            
 
-            let tokenURI = await contract.tokenURI(tokenId);
-            let response = await fetch(tokenURI);
-            let metadata = await response.json();
+            const flag = true;
 
-            const imageToFind = metadata.image;
-            console.log("Image URL:", imageToFind);
-
-            const groupIndex = findImageGroupIndex(petImages, imageToFind);
-
-            if (groupIndex !== -1) {
-                console.log(`Изображение найдено в подмассиве №${groupIndex}`);
-            } else {
-                console.log("Изображение не найдено в массиве.");
-            }
-
-
-            const chosenImage = petImages[groupIndex][age];
-            petImageEl = document.getElementById("selectedPetImage");
-            if (petImageEl) {
-                petImageEl.src = chosenImage;
-                petImageEl.alt = name;
-            }
-
-            console.log(`Pet ${tokenId} - Age: ${age}, Health: ${health}, Experience: ${experience}\nstatus: ${status}`);
-
-
-            const newMetadata = {
-                name: petName,
-                description: `This is ${petName}, your new NFT pet!`,
-                image: chosenImage,
-                attributes: [
-                    { trait_type: "Age", value: Number(age) },
-                    { trait_type: "Health", value: Number(health) },
-                    { trait_type: "Experience", value: Number(experience) },
-                    { trait_type: "Status", value: Number(status) }
-                ]
-            };
-
-
-            let newTokenURI = await uploadMetadataToPinata(newMetadata);
-            console.log("New Token URI:", newTokenURI);
-            await contract.updateTokenURI(tokenId, newTokenURI);
-
-            const totalExperience = await contract.getPetExperience(tokenId);
-            if (experienceEl) experienceEl.textContent = ` ${totalExperience}`;
-
-
-
-
-
-            if (lastFed) {
-                lastFedEl.textContent = ` ${formatted}`;
-                console.log("Last fed updated:", formatted);
-            }
-
-            await updatePetStats();
+            await updatePetStats(flag);
 
             
         } catch (e) {
@@ -850,42 +741,95 @@
 
 
 
-    async function updatePetStats() {                       // функция - обновление состояния питомца (здоровье и опыт) каждые 3 минуты
+    async function updatePetStats(bool flag) {                       // функция - обновление состояния питомца (здоровье и опыт) каждые 3 минуты
 
         if (!tokenId) return;
         console.log("updatePetStats begin");
         try {
-            await contract.decayExperience(tokenId);
-            
+            petName = await contract.getName(tokenId);
             health = await contract.getHealth(tokenId);
             experience = await contract.getPetExperience(tokenId);
-
-            console.log(`🔁 Обновление данных: здоровье: ${health}, опыт: ${experience}`);
-
-            const result = await contract.getPetStatus(tokenId);
-            console.log("PetStatus raw:", result);
-            //const [petName, petHealth, petLastFed, petExperience, petAge, petStatus] = await contract.getPetStatus(tokenId);
+            age = await contract.getAge(tokenId);
             petStatus = await contract.getPetState(tokenId);
 
-            name = await contract.getName(tokenId);
-           // health = petHealth;
-           // lastFed = petLastFed;
-            //experience = petExperience;
-            age = await contract.getAge(tokenId);;
-            status = petStatus === 0 ? "Active" : "Dead";
+            let tokenURI = await contract.tokenURI(tokenId);
+            let response = await fetch(tokenURI);
+            let metadata = await response.json();
 
-            console.log(`🔁 Обновление данных ${name}: здоровье: ${health}, опыт: ${experience},status:${status} `);
+            const imageToFind = metadata.image;
+            console.log("Image URL:", imageToFind);
+
+            const groupIndex = findImageGroupIndex(petImages, imageToFind);
+
+            if (groupIndex !== -1) {
+                console.log(`Изображение найдено в подмассиве №${groupIndex}`);
+            } else {
+                console.log("Изображение не найдено в массиве.");
+            }
 
 
+            const chosenImage = petImages[groupIndex][age];
+            if (petImageEl) {
+                petImageEl.src = chosenImage;
+                petImageEl.alt = petName;
+            }
+            if (flag) {
+                alert(`🐾Вы покормили питомца бонусом!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
+            } else {
+                alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
+            }
+          
+            console.log(`Pet ${tokenId} - Age: ${age}, Health: ${health}, Experience: ${experience}\nstatus: ${status}`);
+
+
+            const newMetadata = {
+                name: petName,
+                description: `This is ${petName}, your new NFT pet!`,
+                image: chosenImage,
+                attributes: [
+                    { trait_type: "Age", value: Number(age) },
+                    { trait_type: "Health", value: Number(health) },
+                    { trait_type: "Experience", value: Number(experience) },
+                    { trait_type: "Status", value: Number(petStatus) }
+                ]
+            };
+
+
+            let newTokenURI = await uploadMetadataToPinata(newMetadata);
+            console.log("New Token URI:", newTokenURI);
+            await contract.updateTokenURI(tokenId, newTokenURI);
+
+            let totalExperience = await contract.getPetExperience(tokenId);
+            if (experienceEl) experienceEl.textContent = ` ${totalExperience}`;
+
+
+
+
+            if (lastFed) {
+                lastFedEl.textContent = ` ${formatted}`;
+                console.log("Last fed updated:", formatted);
+            }
+
+
+
+
+            await contract.decayExperience(tokenId);
+            
+        
+         
+
+            console.log(`🔁 Обновление данных ${name}: здоровье: ${health}, опыт: ${experience},status:${petStatus} `);
+
+            status = petStatus === 0n ? "Active" : "Dead";
             console.log("updatePetStats update");
             
             
-            if (nameEl) nameEl.textContent = name;
-            if (healthEl) healthEl.textContent = `Здоровье: ${health}`;
-            if (lastFed) lastFedEl.textContent = `Последнее кормление: ${formatted}`;
-            if (experienceEl) experienceEl.textContent = `Опыт: ${experience}`;
-            if (ageEl) ageEl.textContent = `Возраст: ${age}`;
-            if (statusEl) statusEl.textContent = `Статус: ${status}`;
+            if (nameEl) nameEl.textContent = petName;
+            if (healthEl) healthEl.textContent = `${health}`;
+            if (lastFed) lastFedEl.textContent = ` ${formatted}`;
+            if (experienceEl) experienceEl.textContent = ` ${experience}`;
+            if (ageEl) ageEl.textContent = ` ${age}`;
+            if (statusEl) statusEl.textContent = ` ${status}`;
             console.log("updatePetStats end");
         } catch (e) {
             console.error("Ошибка при обновлении состояния питомца:", e.message);
