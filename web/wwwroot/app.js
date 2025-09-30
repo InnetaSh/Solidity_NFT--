@@ -240,15 +240,9 @@
             address = await signer.getAddress();
             contract = new ethers.Contract(cfg.address, cfg.abi, signer);
 
-            /*tokenIds = await contract.getMyPets();
-            if (tokenIds.length != 0) {
-                await loadMyPets();
-            }*/
-           // petPrice = await getPET_PRICE();
-            //petBonusFeedPrice = await getBONUS_FEED_PRICE();
+           
 
-            if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${ethers.formatEther(petPrice)} ETH`;
-            if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
+           
             
             
             await subscribeEvents();
@@ -1268,7 +1262,15 @@
 
     window.onload = async function () {
         await loadConfig();
-        await connect();
+        while (!contract) {
+            await connect();
+
+           
+            if (!contract) {
+                console.warn("Повторная попытка подключения через 1 секунду...");
+                await new Promise(res => setTimeout(res, 1000));
+            }
+        }
 
 
         await loadMyPets();
@@ -1278,17 +1280,7 @@
 
         if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${petPrice} ETH`;
         if (feedPetBonusBtn) feedPetBonusBtn.title = `Бонусное кормление стоит ${petPrice} ETH`;
-       // if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
-        /*
-        tokenIds = await contract.getMyPets();
-        if (tokenIds.length > 0) {
-            selectedTokenId = tokenIds[0];  
-            await loadMyPets();
-            await updatePetStats();        
-        }
-        */
-        
-        //setInterval(updatePetStats, 3 * 60 * 1000);
+      
     };
  
 })();
