@@ -104,6 +104,10 @@
     let petBonusFeedPrice = "0";                                    // цена бонусного кормления питомца !
     let petHealPrice = "0";                                    // цена лечения питомца !
 
+
+
+   
+
     const statePet = {
         "0": "Active",
         "1": "Dead"
@@ -122,8 +126,13 @@
     });
 
     
-    const SATIETY_DECAY_INTERVAL = 120; // секунд
-    const SATIETY_DECAY_AMOUNT = 1;
+    let SATIETY_DECAY_INTERVAL = 0; // секунд
+    let SATIETY_DECAY_AMOUNT = 0;
+
+
+    let HEALTH_DECAY_PERCENT = 0;            
+    let HEALTH_DECAY_MIN_INTERVAL = 0;    
+
 
 
 
@@ -235,8 +244,8 @@
             if (tokenIds.length != 0) {
                 await loadMyPets();
             }*/
-            petPrice = await getPET_PRICE();
-            petBonusFeedPrice = await getBONUS_FEED_PRICE();
+           // petPrice = await getPET_PRICE();
+            //petBonusFeedPrice = await getBONUS_FEED_PRICE();
 
             if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${ethers.formatEther(petPrice)} ETH`;
             if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
@@ -983,6 +992,74 @@
             return "0";
         }
     }
+    async function getHEAL_PRICE() {
+        await loadConfig();
+        await connect();
+        try {
+            if (!contract) {
+                throw new Error("Контракт не инициализирован");
+            }
+
+            const price = await contract.getHEAL_PRICE();
+            console.log("price:", price);
+            return ethers.formatEther(price);
+        } catch (err) {
+            console.error("Ошибка получения цены питомца:", err);
+            return "0";
+        }
+
+    }
+
+    async function getPet_Price() {
+        await loadConfig();
+        await connect();
+        try {
+            if (!contract) {
+                throw new Error("Контракт не инициализирован");
+            }
+
+            let newPrice = await contract.getPET_PRICE();
+            console.log("newPrice:", newPrice);
+            petPrice = ethers.formatEther(newPrice);
+
+            let newPetBonusFeedPrice = await contract.getBONUS_FEED_PRICE();
+            console.log("newPetBonusFeedPrice:", newPetBonusFeedPrice);
+            petBonusFeedPrice = ethers.formatEther(newPetBonusFeedPrice);
+
+            const newPetHealPrice = await contract.getHEAL_PRICE();
+            console.log("newPetHealPrice:", newPetHealPrice);
+            petHealPrice = ethers.formatEther(newPetHealPrice);
+        } catch (err) {
+            console.error("Ошибка получения цены питомца:", err);
+            return "0";
+        }
+
+    }
+
+
+    async function getPet_Const() {
+        await loadConfig();
+        await connect();
+        try {
+            if (!contract) {
+                throw new Error("Контракт не инициализирован");
+            }
+            SATIETY_DECAY_INTERVAL = Number(await contract.getSATIETY_DECAY_INTERVAL());
+            console.log("SATIETY_DECAY_INTERVAL:", SATIETY_DECAY_INTERVAL);
+
+            SATIETY_DECAY_AMOUNT = Number(await contract.getSATIETY_DECAY_AMOUNT());
+            console.log("SATIETY_DECAY_AMOUNT:", SATIETY_DECAY_AMOUNT);
+
+             HEALTH_DECAY_PERCENT = 10;
+             HEALTH_DECAY_MIN_INTERVAL = 600;
+
+        } catch (err) {
+            console.error("Ошибка получения const питомца:", err);
+            return "0";
+        }
+
+    }
+
 
 
     function goToShop() {
@@ -1195,10 +1272,12 @@
 
 
         await loadMyPets();
-        petPrice = await getPET_PRICE();
-        petBonusFeedPrice = await getBONUS_FEED_PRICE();
+     
+        await getPet_Price();
+        await getPet_Const();
 
-        if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${ethers.formatEther(petPrice)} ETH`;
+        if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${petPrice} ETH`;
+        if (feedPetBonusBtn) feedPetBonusBtn.title = `Бонусное кормление стоит ${petPrice} ETH`;
        // if (petBonusFeedPriceEl) petBonusFeedPriceEl.textContent = `Цена бонусного кормления: ${ethers.formatEther(petBonusFeedPrice)} ETH`;
         /*
         tokenIds = await contract.getMyPets();
