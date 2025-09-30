@@ -639,8 +639,8 @@
       ]
     },
     "E:\\STEP\\SmartContracts\\NFT-питомец\\chain\\contracts\\NFTPet.sol": {
-      "lastModificationDate": 1758261474855,
-      "contentHash": "376e073dcd8bdb012dbfb63b4e2988c7",
+      "lastModificationDate": 1759214563458,
+      "contentHash": "773fdd3d2ae9d3c6ff8d49b1a3e53a07",
       "sourceName": "contracts/NFTPet.sol",
       "solcConfig": {
         "version": "0.8.28",

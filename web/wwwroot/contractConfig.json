@@ -1,5 +1,5 @@
 {
-  "address": "0xE3011A37A904aB90C8881a99BD1F6E21401f1522",
+  "address": "0x998abeb3E57409262aE5b751f60747921B33613E",
   "abi": [
     {
       "inputs": [],
@@ -242,6 +242,19 @@
     },
     {
       "inputs": [],
+      "name": "HEAL_PRICE",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "PET_PRICE",
       "outputs": [
         {
@@ -458,6 +471,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "getHEAL_PRICE",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -585,31 +611,17 @@
           "type": "uint256"
         }
       ],
-      "name": "getPetState",
-      "outputs": [
-        {
-          "internalType": "enum NFTPet.PetState",
-          "name": "",
-          "type": "uint8"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "getPetStatus",
+      "name": "getPetInfo",
       "outputs": [
         {
           "internalType": "string",
           "name": "name",
           "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "satiety",
+          "type": "uint256"
         },
         {
           "internalType": "uint256",
@@ -619,6 +631,11 @@
         {
           "internalType": "uint256",
           "name": "lastFed",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lastHealthDecay",
           "type": "uint256"
         },
         {
@@ -638,6 +655,83 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getPetState",
+      "outputs": [
+        {
+          "internalType": "enum NFTPet.PetState",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSATIETY_DECAY_AMOUNT",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSATIETY_DECAY_INTERVAL",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getSatiety",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "healPet",
+      "outputs": [],
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -750,12 +844,22 @@
         },
         {
           "internalType": "uint256",
+          "name": "satiety",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
           "name": "health",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
           "name": "lastFed",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lastHealthDecay",
           "type": "uint256"
         },
         {
@@ -885,6 +989,19 @@
         }
       ],
       "name": "setBONUS_FEED_PRICE",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_price",
+          "type": "uint256"
+        }
+      ],
+      "name": "setHEAL_PRICE",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

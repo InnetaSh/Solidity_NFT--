@@ -7,6 +7,7 @@
     const experienceEl = document.getElementById("petExperience");
     const ageEl = document.getElementById("petAge");
     const statusEl = document.getElementById("petStatus");
+    const satietyEl = document.getElementById("petSatiety");
 
     const feedErrorEl = document.getElementById("feedError");
 
@@ -96,9 +97,12 @@
     let tokenIds = [];
     let tokenId;
 
-    let name, health, lastFed, experience, age, status;
+    let name, satiety, health, lastFed, lastHealthDecay, experience, age, status;
+
+
     let petPrice = "0";                                             // цена питомца !
     let petBonusFeedPrice = "0";                                    // цена бонусного кормления питомца !
+    let petHealPrice = "0";                                    // цена лечения питомца !
 
     const statePet = {
         "0": "Active",
@@ -117,6 +121,9 @@
         second: '2-digit'
     });
 
+    
+    const SATIETY_DECAY_INTERVAL = 120; // секунд
+    const SATIETY_DECAY_AMOUNT = 1;
 
 
 
@@ -258,7 +265,8 @@
 
         contract.on("PetDied", async (tokenId, newHealth, newExperience, event) => {
             if (selectedTokenId && selectedTokenId === tokenId.toString()) {
-                await updatePetStats();
+                const flag = 0;
+                await updatePetStats(flag);
             }
         });
 
@@ -310,6 +318,7 @@
                 image: imageUrl,
                 attributes: [
                     { trait_type: "Age", value: 0 },
+                    { trait_type: "Satiety", value: 100 },
                     { trait_type: "Health", value: 100 },
                     { trait_type: "Experience", value: 0 }
                 ]
@@ -378,6 +387,7 @@
                 image: chosenImage,
                 attributes: [
                     { trait_type: "Age", value: 0 },
+                    { trait_type: "Satiety", value: 100 },
                     { trait_type: "Health", value: 100 },
                     { trait_type: "Experience", value: 0 },
                     { trait_type: "Status", value: 0 }
@@ -467,6 +477,8 @@
     }
 
     async function loadMyPets() {
+        await loadConfig();
+        await connect();
         try {
             tokenIds = await contract.getMyPets();
             const container = document.getElementById("petContainer");  //на фронте сделать контейнер с таким id для отображения питомцев
@@ -589,27 +601,29 @@
         
     }
 
-    async function getPetStatus(tokenId) {
+    async function getPetInfo(tokenId) {
         try {
             if (!contract) {
                await connect();
             }
 
 
-            const [petName, petHealth, petLastFed, petExperience, petAge, petStatus] = await contract.getPetStatus(tokenId);
+            const [petName, petSatiety, petHealth, petLastFed, petLastHealthDecay, petExperience, petAge, petStatus] = await contract.getPetInfo(tokenId);
 
 
             name = petName;
             health = petHealth;
+            satiety = petSatiety;
             lastFed = petLastFed;
+            lastHealthDecay = petLastHealthDecay;
             experience = petExperience;
             age = petAge;
             status = petStatus === 0 ? "Active" : "Dead";
-            return [name, health, lastFed, experience, age, status];
+            return [name, satiety, health, lastFed, lastHealthDecay, experience, age, status];
         }
         catch (e) {
             alert("Ошибка при получении статуса питомца: " + e.message);
-            return [null, null, null, null, null, null];
+            return [null, null, null, null, null, null, null, null];
         }
     }
 
@@ -637,7 +651,7 @@
 
 
            
-            const flag = false;
+            const flag = 1;
             await updatePetStats(flag);
         }
         catch (e) {
@@ -691,13 +705,14 @@
             await tx.wait();
 
             petName = await contract.getName(tokenId);
+            satiety = await contract.getSatiety(tokenId);
             health = await contract.getHealth(tokenId);
             experience = await contract.getPetExperience(tokenId);
             age = await contract.getAge(tokenId);
             status = await contract.getPetState(tokenId);
             
 
-            const flag = true;
+            const flag = 2;
 
             await updatePetStats(flag);
 
@@ -741,12 +756,13 @@
 
 
 
-    async function updatePetStats(bool flag) {                       // функция - обновление состояния питомца (здоровье и опыт) каждые 3 минуты
+    async function updatePetStats( flag) {                       // функция - обновление состояния питомца (здоровье и опыт) каждые 3 минуты
 
         if (!tokenId) return;
         console.log("updatePetStats begin");
         try {
             petName = await contract.getName(tokenId);
+            satiety = await contract.getSatiety(tokenId);
             health = await contract.getHealth(tokenId);
             experience = await contract.getPetExperience(tokenId);
             age = await contract.getAge(tokenId);
@@ -766,20 +782,20 @@
             } else {
                 console.log("Изображение не найдено в массиве.");
             }
-
+            console.log("Еда :", satiety);
 
             const chosenImage = petImages[groupIndex][age];
             if (petImageEl) {
                 petImageEl.src = chosenImage;
                 petImageEl.alt = petName;
             }
-            if (flag) {
-                alert(`🐾Вы покормили питомца бонусом!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
-            } else {
+            if (flag == 1) {
+                alert(`🐾Вы покормили питомца бонусом!\nЕда : ${satiety} \nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
+            } else if(flag==2){
                 alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
             }
           
-            console.log(`Pet ${tokenId} - Age: ${age}, Health: ${health}, Experience: ${experience}\nstatus: ${status}`);
+            console.log(`Pet ${tokenId} - Age: ${age},!\nЕда : ${satiety},  Health: ${health}, Experience: ${experience}\nstatus: ${petStatus}`);
 
 
             const newMetadata = {
@@ -788,6 +804,7 @@
                 image: chosenImage,
                 attributes: [
                     { trait_type: "Age", value: Number(age) },
+                    { trait_type: "Satiety", value: Number(satiety) }, 
                     { trait_type: "Health", value: Number(health) },
                     { trait_type: "Experience", value: Number(experience) },
                     { trait_type: "Status", value: Number(petStatus) }
@@ -801,32 +818,37 @@
 
             let totalExperience = await contract.getPetExperience(tokenId);
             if (experienceEl) experienceEl.textContent = ` ${totalExperience}`;
-
-
-
-
-            if (lastFed) {
-                lastFedEl.textContent = ` ${formatted}`;
-                console.log("Last fed updated:", formatted);
-            }
-
-
-
+            
 
             await contract.decayExperience(tokenId);
             
         
          
-
-            console.log(`🔁 Обновление данных ${name}: здоровье: ${health}, опыт: ${experience},status:${petStatus} `);
+            status = petStatus === 0n ? "Active" : "Dead";
+            console.log(`🔁 Обновление данных ${name}:\nЕда : ${satiety} здоровье: ${health}, опыт: ${experience},status:${petStatus} `);
+            console.log(petStatus === 0n ? "Active" : "Dead");
 
             status = petStatus === 0n ? "Active" : "Dead";
             console.log("updatePetStats update");
-            
+
+
+            console.log({
+                nameEl,
+                satietyEl,
+                healthEl,
+                experienceEl,
+                ageEl,
+                statusEl,
+            });
             
             if (nameEl) nameEl.textContent = petName;
-            if (healthEl) healthEl.textContent = `${health}`;
-            if (lastFed) lastFedEl.textContent = ` ${formatted}`;
+            if (satietyEl) {
+                satietyEl.textContent = `${satiety}%`;
+                if (lastFed) {
+                    satietyEl.title = `Последнее кормление: ${formatted}`;
+                }
+            }
+            if (healthEl) healthEl.textContent = `${health}%`;
             if (experienceEl) experienceEl.textContent = ` ${experience}`;
             if (ageEl) ageEl.textContent = ` ${age}`;
             if (statusEl) statusEl.textContent = ` ${status}`;
@@ -837,6 +859,47 @@
     }
 
 
+    function calculateSatiety(lastFed, baseSatiety) {
+        try {
+            const now = Math.floor(Date.now() / 1000); // время сейчас в секундах
+            const timePassed = now - Number(lastFed); // Приведение BigInt к Number
+
+
+            const decayUnits = Math.floor(timePassed / SATIETY_DECAY_INTERVAL);
+            const decay = decayUnits * SATIETY_DECAY_AMOUNT;
+
+            const currentSatiety = Math.max(0, baseSatiety - decay);
+           // return currentSatiety;
+         
+
+            if (satietyEl) {
+                satietyEl.textContent = `${currentSatiety}%`;
+                if (lastFed) {
+                    const lastFedDate = new Date(Number(lastFed) * 1000);
+                    const newFormatted = lastFedDate.toLocaleString();
+                    satietyEl.title = `Последнее кормление: ${newFormatted}`;
+                }
+            }
+
+            console.log("Обновлены данные о еде питомца");
+        } catch (err) {
+            console.error("Ошибка при обновлении статуса питомца:", err);
+        }
+    }
+
+    async function updatePetHealth(tokenId) {
+        try {
+            const health = await contract.getHealth(tokenId);
+
+            if (healthEl) {
+                healthEl.textContent = `${health}%`;
+            }
+
+            console.log("Обновлены данные о здоровье питомца");
+        } catch (err) {
+            console.error("Ошибка при обновлении статуса питомца:", err);
+        }
+    }
    
     async function sellPet() {                     // Продать питомца другому адресу
          
@@ -887,6 +950,8 @@
     }
 
     async function getPET_PRICE() {
+        await loadConfig();
+        await connect();
         try {
                 if (!contract) {
                     throw new Error("Контракт не инициализирован");
@@ -903,6 +968,8 @@
     }
 
     async function getBONUS_FEED_PRICE() {
+        await loadConfig();
+        await connect();
         try {
                 if (!contract) {
                     throw new Error("Контракт не инициализирован");
@@ -945,7 +1012,8 @@
 
         try {
             //debugger;
-            [name, health, lastFed, experience, age, status] = await getPetStatus(tokenId);
+            [name, satiety, health, lastFed, lastHealthDecay, experience, age, status] = await getPetInfo(tokenId);
+          
             
             petStatus = await contract.getPetState(tokenId);
             status = petStatus === 0n ? "Active" : "Dead";
@@ -956,22 +1024,59 @@
                 burnPetBtn.classList.remove('non-display');
             }
             
-            console.log(`Pet ${tokenId} - Name: ${name}, Age: ${age}, Health: ${health}, Experience: ${experience}, Status: ${petStatus}`);
-
+            console.log(`Pet ${tokenId} - Name: ${name},Еда:${satiety}, Age: ${age}, Health: ${health}, Experience: ${experience}, Status: ${petStatus}`);
 
 
            
+            let newDate = new Date(Number(lastFed) * 1000);
+
+
+            let newFormatted = newDate.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
 
             const tokenURI = await contract.tokenURI(tokenId);
             const response = await fetch(tokenURI);
             const metadata = await response.json();
-            
+
+
+           
+            health = await contract.getHealth(tokenId);
+
+           
+          
+            if (healthEl) healthEl.textContent = ` ${health}%`;
             if (nameEl) nameEl.textContent = name;
-            if (healthEl) healthEl.textContent = ` ${health}`;
-            if (lastFedEl) lastFedEl.textContent = ` ${formatted}`;
             if (experienceEl) experienceEl.textContent = ` ${experience}`;
             if (ageEl) ageEl.textContent = ` ${age}`;
             if (statusEl) statusEl.textContent = ` ${status}`;
+
+          //  satiety = await contract.getSatiety(tokenId);
+
+
+            if (satietyEl) {
+                satietyEl.textContent = `${satiety}%`;
+                if (lastFed) {
+                    const lastFedDate = new Date(Number(lastFed) * 1000);
+                    const newFormatted = lastFedDate.toLocaleString();
+                    satietyEl.title = `Последнее кормление: ${newFormatted}`;
+                }
+            }
+
+            let baseSatiety = Number(satiety);
+
+            calculateSatiety(lastFed, baseSatiety);
+            setInterval(() => {
+                calculateSatiety(lastFed, baseSatiety);
+            }, 2 * 60 * 1000);
+            setInterval(() => {
+                updatePetHealth(tokenId);
+            }, 10 * 60 * 1000);
 
             const petImageEl = document.getElementById("selectedPetImage");
             if (petImageEl) {
