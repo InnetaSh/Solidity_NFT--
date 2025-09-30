@@ -160,7 +160,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
        // require(pet.experience == 0 || block.timestamp - pet.lastFed >= 120, "Too early to feed again");
         require(pet.state == PetState.Active, "Pet is not active");
         require(getSatiety(tokenId) < MAX_SATIETY, "Pet is already full");
-        require(getHealth(tokenId) < MAX_HEALTH, "Pet is already healthy");
+      
 
         uint currentSatiety = getSatiety(tokenId);
         uint currentHealth = getHealth(tokenId);
@@ -199,7 +199,6 @@ contract NFTPet is ERC721URIStorage, Ownable {
        // require(pet.experience == 0 || block.timestamp - pet.lastFed >= 300, "Too early to feed again");
         require(msg.value >= BONUS_FEED_PRICE, "Not enough ETH for bonus feed");
         require(getSatiety(tokenId) < MAX_SATIETY, "Pet is already full");
-        require(getHealth(tokenId) < MAX_HEALTH, "Pet is already healthy");
         require(pet.state == PetState.Active, "Pet is not active");
 
         pet.health = MAX_HEALTH;
@@ -226,6 +225,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
         Pet storage pet = pets[tokenId];
         require(pet.state == PetState.Active, "Pet is not active");
         require(msg.value >= HEAL_PRICE, "Not enough ETH to heal");
+        require(getHealth(tokenId) < MAX_HEALTH, "Pet is already healthy");
 
         uint currentHealth = getHealth(tokenId);
         require(currentHealth < MAX_HEALTH, "Already at full health");

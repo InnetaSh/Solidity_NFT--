@@ -23,6 +23,7 @@
 
     const feedPetBtn = document.getElementById('feedPetBtn');  //кнопка кормить питомца
     const feedPetBonusBtn = document.getElementById('feedPetBonusBtn');  //кнопка кормить питомца бонусом
+    const feedPetHealtBtn = document.getElementById('feedPetHealtBtn');  //кнопка лечить питомца
     const sellPetBtn = document.getElementById('sellPetBtn');  //кнопка продать питомца
     const showSellPetBtn = document.getElementById('showSellPetBtn');  //кнопка показать форму продажи питомца
     const closeSellPetBtn = document.getElementById('closeSellPetBtn');  //кнопка закрыть форму продажи питомца
@@ -59,6 +60,10 @@
     }
     if (feedPetBonusBtn) {
         feedPetBonusBtn.addEventListener('click', feedPetBonus);
+    }
+
+    if (feedPetHealtBtn) {
+        feedPetHealtBtn.addEventListener('click', healPet);
     }
     if (sellPetBtn) {
         sellPetBtn.addEventListener('click', sellPet);
@@ -758,6 +763,69 @@
     }
 
 
+    async  function healPet(){
+        if (!tokenId) {
+            alert("Сначала выберите питомца.");
+            return;
+        }
+
+        try {
+            let value = ethers.parseEther(petHealPrice);
+            console.log("Sending bonus healt with value:", value);
+            const tx = await contract.healPet(tokenId, { value: value });
+
+            await tx.wait();
+
+            petName = await contract.getName(tokenId);
+            [name, satiety, health, lastFed, lastHealthDecay, experience, age, status] = await getPetInfo(tokenId);
+
+
+            const flag = 3;
+
+            await updatePetStats(flag);
+
+
+        } catch (e) {
+            alert("Ошибка при лечении: " + e.message);
+            let errorMessage = "Ошибка при лечении питомца.";
+
+
+            const revertReason =
+                e?.error?.reason ||
+                e?.error?.revert?.args?.[0] ||
+                e?.reason ||
+                e?.revert?.args?.[0];
+
+            
+                   
+                
+          
+            if (revertReason) {
+                if (revertReason.includes("Pet is already healthy")) {
+                    errorMessage = "⏳ Pet is already healthy!";
+                } else if (revertReason.includes("Pet is not active")) {
+                    errorMessage = "💀 Питомец мёртв или неактивен. Возродите его.";
+                } else {
+                    errorMessage = "⚠️ " + revertReason;
+                }
+            } else if (e?.message) {
+                errorMessage = "⚠️ " + e.message;
+            }
+            
+
+            if (feedErrorEl) {
+                feedErrorEl.textContent = errorMessage;
+                feedErrorEl.classList.add("error-message");
+
+                setTimeout(() => {
+                    feedErrorEl.classList.add("hidden");
+                }, 5000);
+
+
+                feedErrorEl.classList.remove("hidden");
+            }
+        }
+    }
 
     async function updatePetStats( flag) {                       // функция - обновление состояния питомца (здоровье и опыт) каждые 3 минуты
 
@@ -765,11 +833,12 @@
         console.log("updatePetStats begin");
         try {
             petName = await contract.getName(tokenId);
-            satiety = await contract.getSatiety(tokenId);
-            health = await contract.getHealth(tokenId);
-            experience = await contract.getPetExperience(tokenId);
-            age = await contract.getAge(tokenId);
-            petStatus = await contract.getPetState(tokenId);
+            [name, satiety, health, lastFed, lastHealthDecay, experience, age, petStatus] = await getPetInfo(tokenId);
+            //satiety = await contract.getSatiety(tokenId);
+           // health = await contract.getHealth(tokenId);
+          //  experience = await contract.getPetExperience(tokenId);
+         //   age = await contract.getAge(tokenId);
+         //   petStatus = await contract.getPetState(tokenId);
 
             let tokenURI = await contract.tokenURI(tokenId);
             let response = await fetch(tokenURI);
@@ -865,7 +934,7 @@
     function calculateSatiety(lastFed, baseSatiety) {
         try {
             const now = Math.floor(Date.now() / 1000); // время сейчас в секундах
-            const timePassed = now - Number(lastFed); // Приведение BigInt к Number
+            const timePassed = now - Number(lastFed);
 
 
             const decayUnits = Math.floor(timePassed / SATIETY_DECAY_INTERVAL);
@@ -890,19 +959,33 @@
         }
     }
 
-    async function updatePetHealth(tokenId) {
+
+    function calculateHealth(lastHealthDecay, baseHealth) {
         try {
-            const health = await contract.getHealth(tokenId);
+            const now = Math.floor(Date.now() / 1000); // текущие секунды
+            const timePassed = now - Number(lastHealthDecay); // сколько прошло с момента последнего ухудшения здоровья
+
+            const decayUnits = Math.floor(timePassed / HEALTH_DECAY_MIN_INTERVAL);
+            const healthLoss = decayUnits * HEALTH_DECAY_PERCENT;
+
+            const currentHealth = Math.max(0, baseHealth - healthLoss);
 
             if (healthEl) {
-                healthEl.textContent = `${health}%`;
+                healthEl.textContent = `${currentHealth}%`;
+
+                if (lastHealthDecay) {
+                    const lastHealthDate = new Date(Number(lastHealthDecay) * 1000);
+                    const formatted = lastHealthDate.toLocaleString();
+                    healthEl.title = `Последнее обновление здоровья: ${formatted}`;
+                }
             }
 
             console.log("Обновлены данные о здоровье питомца");
         } catch (err) {
-            console.error("Ошибка при обновлении статуса питомца:", err);
+            console.error("Ошибка при обновлении здоровья питомца:", err);
         }
     }
+
    
     async function sellPet() {                     // Продать питомца другому адресу
          
@@ -1114,11 +1197,7 @@
             const tokenURI = await contract.tokenURI(tokenId);
             const response = await fetch(tokenURI);
             const metadata = await response.json();
-
-
-           
-            health = await contract.getHealth(tokenId);
-
+            
            
           
             if (healthEl) healthEl.textContent = ` ${health}%`;
@@ -1127,7 +1206,16 @@
             if (ageEl) ageEl.textContent = ` ${age}`;
             if (statusEl) statusEl.textContent = ` ${status}`;
 
-          //  satiety = await contract.getSatiety(tokenId);
+            if (healthEl) {
+                healthEl.textContent = `${health}%`;
+                if (lastFed) {
+                    const lastHealthDecayDate = new Date(Number(lastHealthDecay) * 1000);
+                    const newFormatted = lastHealthDecayDate.toLocaleString();
+                    satietyEl.title = `Последнее лечение: ${newFormatted}`;
+                }
+            }
+
+            
 
 
             if (satietyEl) {
@@ -1140,14 +1228,30 @@
             }
 
             let baseSatiety = Number(satiety);
+            let baseHealth = Number(health);
 
             calculateSatiety(lastFed, baseSatiety);
-            setInterval(() => {
-                calculateSatiety(lastFed, baseSatiety);
-            }, 2 * 60 * 1000);
-            setInterval(() => {
-                updatePetHealth(tokenId);
-            }, 10 * 60 * 1000);
+            calculateHealth(lastHealthDecay, baseHealth);
+            setInterval(async () => {
+                try {
+                    const satiety = await contract.getSatiety(tokenId);
+                    const baseSatiety = Number(satiety);
+                    calculateSatiety(lastFed, baseSatiety);
+                } catch (err) {
+                    console.error("Ошибка при обновлении сытости:", err);
+                }
+            }, 2 * 60 * 1000); // каждые 2 минуты
+
+            setInterval(async () => {
+                try {
+                    const health = await contract.getHealth(tokenId);
+                    const baseHealth = Number(health);
+                    calculateHealth(lastHealthDecay, baseHealth);
+                } catch (err) {
+                    console.error("Ошибка при обновлении здоровья:", err);
+                }
+            }, 10 * 60 * 1000); // каждые 10 минут
+
 
             const petImageEl = document.getElementById("selectedPetImage");
             if (petImageEl) {
