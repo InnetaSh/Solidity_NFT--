@@ -27,7 +27,7 @@
     const sellPetBtn = document.getElementById('sellPetBtn');  //кнопка продать питомца
     const showSellPetBtn = document.getElementById('showSellPetBtn');  //кнопка показать форму продажи питомца
     const closeSellPetBtn = document.getElementById('closeSellPetBtn');  //кнопка закрыть форму продажи питомца
-    const burnDeadPetBtn = document.getElementById('burnDeadPetBtn');  //кнопка сжечь мертвого питомца
+    const burnPetBtn = document.getElementById('burnPetBtn');  //кнопка сжечь мертвого питомца
 
 
     const inputPetName = document.getElementById('inputPetName');
@@ -84,8 +84,8 @@
         });
     }
 
-    if (burnDeadPetBtn) {
-        burnDeadPetBtn.addEventListener('click', burnDeadPet);
+    if (burnPetBtn) {
+        burnPetBtn.addEventListener('click', burnDeadPet);
     }
 
 
@@ -266,33 +266,44 @@
             console.error("Contract is not initialized");
             return;
         }
-        contract.on("PetCreated", async (tokenId, owner, event) => {
-            console.log(`PetCreated: ID ${tokenId.toString()}`);
-            await loadMyPets();
-        });
-
-        contract.on("PetDied", async (tokenId, newHealth, newExperience, event) => {
-            if (selectedTokenId && selectedTokenId === tokenId.toString()) {
-                const flag = 0;
-                await updatePetStats(flag);
-            }
-        });
-
-        contract.on("PetSold", async (tokenId, from, to, event) => {
-            if (selectedTokenId && selectedTokenId === tokenId.toString()) {
-                alert(`Питомец ${tokenId.toString()} был продан.`);
-                selectedTokenId = null;
+        tokenIds = await contract.getMyPets();
+        if (tokenIds.length > 0) {
+            console.log("Subscribing to contract events");
+            console.log(tokenIds.length);
+            contract.on("PetCreated", async (tokenId, owner, event) => {
+                console.log(`PetCreated: ID ${tokenId.toString()}`);
                 await loadMyPets();
-            }
-        });
+            });
 
-        contract.on("PetFed", async (tokenId, event) => {
-            if (selectedTokenId && selectedTokenId === tokenId.toString()) {
-                alert(`Питомец ${tokenId.toString()} был сожжен.`);
-                selectedTokenId = null;
-                await loadMyPets();
-            }
-        });
+            contract.on("PetInactive", async (tokenId, newHealth, newExperience, event) => {
+                if (selectedTokenId && selectedTokenId === tokenId.toString()) {
+                    const flag = 0;
+                    await updatePetStats(flag);
+                }
+            });
+            contract.on("PetRevived", async (tokenId, newHealth, newExperience, event) => {
+                if (selectedTokenId && selectedTokenId === tokenId.toString()) {
+                    const flag = 0;
+                    await updatePetStats(flag);
+                }
+            });
+
+            contract.on("PetSold", async (tokenId, from, to, event) => {
+                if (selectedTokenId && selectedTokenId === tokenId.toString()) {
+                    alert(`Питомец ${tokenId.toString()} был продан.`);
+                    selectedTokenId = null;
+                    await loadMyPets();
+                }
+            });
+
+            contract.on("PetFed", async (tokenId, event) => {
+                if (selectedTokenId && selectedTokenId === tokenId.toString()) {
+                    alert(`Питомец ${tokenId.toString()} был сожжен.`);
+                    selectedTokenId = null;
+                    await loadMyPets();
+                }
+            });
+        }
     }
 
     async function getPet() {            // функция - получение питомца
@@ -494,6 +505,13 @@
             if (!container) {
                 return; 
             }
+            if (tokenIds.length === 0) {
+                container.innerHTML = "<p>У вас ещё нет питомцев.</p>";
+                // document.getElementById('selectedPetDetails').classList.add("non-display");
+                console.log("No pets found for this address.");
+                console.log("tokenIds:", tokenIds);
+                return;
+            }
 
             if (tokenIds.length === 1) {
                 container.classList.add("pet-сontainer");
@@ -521,11 +539,7 @@
             if (container) { 
                 container.innerHTML = "";
 
-                if (tokenIds.length === 0) {
-                    container.innerHTML = "<p>У вас ещё нет питомцев.</p>";
-                   // document.getElementById('selectedPetDetails').classList.add("non-display");
-                    return;
-                }
+               
            
 
                 for (let i = 0; i < tokenIds.length; i++) {
@@ -1016,20 +1030,18 @@
 
     
     async function burnDeadPet() {              // Сжечь мертвого питомца
-        if (!selectedTokenId) {
+        if (!tokenId) {
             alert("Сначала выберите питомца.");
             return;
         }
         try {
-            const petState = await contract.getPetState(selectedTokenId);
-            if (petState !== 1) { 
-                alert("Питомец не мертвый");
-                return;
-            }
-            const tx = await contract.burnDeadPet(selectedTokenId);
+           
+            const tx = await contract.burnDeadPet(tokenId);
             await tx.wait();
             alert("Мертвый питомец удалён");
+          
             await loadMyPets();
+            window.location.href = 'my-pets.html';
         } catch (e) {
             alert("Ошибка при удалении: " + e.message);
         }
@@ -1236,6 +1248,17 @@
                 try {
                     const satiety = await contract.getSatiety(tokenId);
                     const baseSatiety = Number(satiety);
+                    if (baseSatiety == 0) {
+                        status = await contract.getPetState();
+                        status = status === 0n ? "Active" : "Dead";
+                        if(petStatus != 0n){
+                            feedPetBtn.classList.add('non-display');
+                            sellPetBtn.classList.add('non-display');
+                            feedPetBonusBtn.classList.add('non-display');
+                            burnPetBtn.classList.remove('non-display');
+                            statusEl.textContent = ` ${status}`;    
+                        }
+                    }
                     calculateSatiety(lastFed, baseSatiety);
                 } catch (err) {
                     console.error("Ошибка при обновлении сытости:", err);

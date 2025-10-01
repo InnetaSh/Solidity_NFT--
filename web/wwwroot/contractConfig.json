@@ -1,5 +1,5 @@
 {
-  "address": "0x998abeb3E57409262aE5b751f60747921B33613E",
+  "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
   "abi": [
     {
       "inputs": [],
@@ -153,9 +153,15 @@
           "internalType": "uint256",
           "name": "tokenId",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newHealth",
+          "type": "uint256"
         }
       ],
-      "name": "PetDied",
+      "name": "PetFed",
       "type": "event"
     },
     {
@@ -166,15 +172,22 @@
           "internalType": "uint256",
           "name": "tokenId",
           "type": "uint256"
-        },
+        }
+      ],
+      "name": "PetInactive",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "newHealth",
+          "name": "tokenId",
           "type": "uint256"
         }
       ],
-      "name": "PetFed",
+      "name": "PetRevived",
       "type": "event"
     },
     {
@@ -891,6 +904,19 @@
       "name": "renounceOwnership",
       "outputs": [],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "revivePet",
+      "outputs": [],
+      "stateMutability": "payable",
       "type": "function"
     },
     {

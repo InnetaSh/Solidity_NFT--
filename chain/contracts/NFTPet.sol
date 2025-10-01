@@ -28,7 +28,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
     uint public  PET_PRICE = 0.01 ether;
     uint public  BONUS_FEED_PRICE = 0.005 ether;
 
-    enum PetState { Active, Dead }
+    enum PetState { Active, Inactive  }
     uint[] public experienceThresholds = [0, 20, 70, 150, 250, 370, 500, 650, 730, 1000];
 
     struct Pet {
@@ -49,7 +49,8 @@ contract NFTPet is ERC721URIStorage, Ownable {
 
     event EvolutionStage(uint tokenId, uint age);
     event PetFed(uint tokenId, uint newHealth);
-    event PetDied(uint tokenId);
+    event PetInactive(uint tokenId);
+    event PetRevived(uint tokenId);
     event PetCreated(uint256 indexed tokenId, address indexed owner);
     event PetSold(uint tokenId, address from, address to);
 
@@ -102,7 +103,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
 
 
     function sellPet(uint256 tokenId, address to) public onlyPetOwner(tokenId) {
-        require(pets[tokenId].state != PetState.Dead, "Cannot sell dead pet");
+        require(pets[tokenId].state != PetState.Inactive, "Cannot sell dead pet");
         safeTransferFrom(msg.sender, to, tokenId);
 
         _removePetFromUser(msg.sender, tokenId);
@@ -125,7 +126,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
     function getHealth(uint tokenId) public view returns (uint) {
         require(_exists(tokenId), "Pet does not exist");
         Pet memory pet = pets[tokenId];
-        if (pet.state == PetState.Dead) return 0;
+        if (pet.state == PetState.Inactive) return 0;
 
         uint timePassed = block.timestamp - pet.lastHealthDecay;
 
@@ -141,7 +142,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
     function getSatiety(uint tokenId) public view returns (uint) {
         require(_exists(tokenId), "Pet does not exist");
         Pet memory pet = pets[tokenId];
-        if (pet.state == PetState.Dead) return 0;
+        if (pet.state == PetState.Inactive) return 0;
 
         uint timePassed = block.timestamp - pet.lastFed;
         uint decayUnits = timePassed / SATIETY_DECAY_INTERVAL;
@@ -163,45 +164,39 @@ contract NFTPet is ERC721URIStorage, Ownable {
       
 
         uint currentSatiety = getSatiety(tokenId);
-        uint currentHealth = getHealth(tokenId);
+       
+        // Увеличиваем сытость на 10%, но не выше MAX
+        pet.satiety = currentSatiety + 10 > MAX_SATIETY ? MAX_SATIETY : currentSatiety + 10;
 
-        if (currentSatiety == 0 || currentHealth == 0) {
-            pet.satiety = 0;
-            pet.health = currentHealth;
-            pet.state = PetState.Dead;
-            emit PetDied(tokenId);
-             return; 
-        } else {
-            pet.satiety = MAX_SATIETY;
-            pet.lastFed = block.timestamp;
+       
+        pet.lastFed = block.timestamp;
 
-            pet.health = currentHealth; // Обновить здоровье
-            pet.lastHealthDecay = block.timestamp;
+        pet.experience += 10;
 
-            pet.experience += 10;
-
-            for (uint i = experienceThresholds.length - 1; i > pet.age; i--) {
-                if (pet.experience >= experienceThresholds[i]) {
-                    pet.age = i;
-                    emit EvolutionStage(tokenId, pet.age);
-                    break;
-                }
+        for (uint i = experienceThresholds.length - 1; i > pet.age; i--) {
+            if (pet.experience >= experienceThresholds[i]) {
+                pet.age = i;
+                emit EvolutionStage(tokenId, pet.age);
+                break;
             }
-
-            emit PetFed(tokenId, pet.satiety);
         }
+
+        emit PetFed(tokenId, pet.satiety);
+        
     }
 
 
     function feedPetBonus(uint tokenId) public payable  onlyPetOwner(tokenId) {
         Pet storage  pet = pets[tokenId];
 
-       // require(pet.experience == 0 || block.timestamp - pet.lastFed >= 300, "Too early to feed again");
+       
         require(msg.value >= BONUS_FEED_PRICE, "Not enough ETH for bonus feed");
         require(getSatiety(tokenId) < MAX_SATIETY, "Pet is already full");
         require(pet.state == PetState.Active, "Pet is not active");
 
-        pet.health = MAX_HEALTH;
+       uint  currentSatiety = getSatiety(tokenId);
+
+        pet.satiety = currentSatiety + 20 > MAX_SATIETY ? MAX_SATIETY : currentSatiety + 20;
         pet.lastFed = block.timestamp;
 
          pet.experience += 25;
@@ -230,7 +225,19 @@ contract NFTPet is ERC721URIStorage, Ownable {
         uint currentHealth = getHealth(tokenId);
         require(currentHealth < MAX_HEALTH, "Already at full health");
 
-        pet.health = MAX_HEALTH;
+      
+        
+        if ( currentHealth == 0) {
+            pet.health = currentHealth;
+            pet.state = PetState.Inactive;
+            emit PetInactive(tokenId);
+             return; 
+        } 
+
+         
+        // Увеличиваем здоровье на 10%, но не выше MAX
+        pet.health = currentHealth + 10 > MAX_HEALTH ? MAX_HEALTH : currentHealth + 10;
+
         pet.lastHealthDecay = block.timestamp;
 
         if (msg.value > HEAL_PRICE) {
@@ -247,7 +254,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
         uint timePassed = block.timestamp - pet.lastFed;
 
         uint daysMissed = timePassed / SECONDS_PER_DAY;
-        uint decayAmount = daysMissed * 5;
+        uint decayAmount = daysMissed * 2;
 
         if (decayAmount > pet.experience) {
             pet.experience = 0;
@@ -257,16 +264,36 @@ contract NFTPet is ERC721URIStorage, Ownable {
 
     }
 
+    function revivePet(uint tokenId) public payable onlyPetOwner(tokenId) {
+        Pet storage pet = pets[tokenId];
+        require(pet.state == PetState.Inactive, "Pet is not inactive");
+        require(msg.value >= BONUS_FEED_PRICE, "Not enough ETH to revive");
+
+        pet.health = 10; // восстанавливаем с 10% здоровья
+        pet.satiety = 10;
+        pet.state = PetState.Active;
+        pet.lastFed = block.timestamp;
+        pet.lastHealthDecay = block.timestamp;
+
+        if (msg.value > BONUS_FEED_PRICE) {
+            payable(msg.sender).transfer(msg.value - BONUS_FEED_PRICE);
+        }
+
+        emit PetRevived(tokenId);
+    }
+
+
     function updateTokenURI(uint tokenId, string memory tokenURI) public onlyPetOwner(tokenId){
         _setTokenURI(tokenId, tokenURI);
     }
 
 
     function burnDeadPet(uint tokenId) public onlyPetOwner(tokenId){
-        require(pets[tokenId].state == PetState.Dead, "Pet is not dead");
+        require(pets[tokenId].state == PetState.Inactive, "Pet is not dead");
 
         _burn(tokenId);
         delete pets[tokenId];
+        _removePetFromUser(msg.sender, tokenId);
     }
 
     function getPetInfo(uint tokenId) public view returns (
@@ -285,7 +312,7 @@ contract NFTPet is ERC721URIStorage, Ownable {
         uint currentHealth = getHealth(tokenId);
 
         if (currentSatiety == 0 || currentHealth == 0) {
-            return (pet.name, 0, 0, pet.lastFed, pet.lastHealthDecay, pet.experience, pet.age, uint8(PetState.Dead));
+            return (pet.name, 0, 0, pet.lastFed, pet.lastHealthDecay, pet.experience, pet.age, uint8(PetState.Inactive));
         }
 
         return (
