@@ -23,7 +23,8 @@
 
     const feedPetBtn = document.getElementById('feedPetBtn');  //кнопка кормить питомца
     const feedPetBonusBtn = document.getElementById('feedPetBonusBtn');  //кнопка кормить питомца бонусом
-    const feedPetHealtBtn = document.getElementById('feedPetHealtBtn');  //кнопка лечить питомца
+    const healPetBtn = document.getElementById('healPetBtn');  //кнопка лечить питомца
+    const healPetBtnBonus = document.getElementById('healPetBtnBonus');  //кнопка лечить питомца бонусом
     const sellPetBtn = document.getElementById('sellPetBtn');  //кнопка продать питомца
     const showSellPetBtn = document.getElementById('showSellPetBtn');  //кнопка показать форму продажи питомца
     const closeSellPetBtn = document.getElementById('closeSellPetBtn');  //кнопка закрыть форму продажи питомца
@@ -62,8 +63,12 @@
         feedPetBonusBtn.addEventListener('click', feedPetBonus);
     }
 
-    if (feedPetHealtBtn) {
-        feedPetHealtBtn.addEventListener('click', healPet);
+    if (healPetBtn) {
+        healPetBtn.addEventListener('click', healPet);
+    }
+
+    if (healPetBtnBonus) {
+        healPetBtnBonus.addEventListener('click', healPetBonus);
     }
     if (sellPetBtn) {
         sellPetBtn.addEventListener('click', sellPet);
@@ -115,7 +120,7 @@
 
     const statePet = {
         "0": "Active",
-        "1": "Dead"
+        "1": "Inactive"
     };
 
     const timestamp = Date.now();
@@ -640,7 +645,7 @@
             lastHealthDecay = petLastHealthDecay;
             experience = petExperience;
             age = petAge;
-            status = petStatus === 0 ? "Active" : "Dead";
+            status = petStatus === 0 ? "Active" : "Inactive";
             return [name, satiety, health, lastFed, lastHealthDecay, experience, age, status];
         }
         catch (e) {
@@ -841,18 +846,80 @@
         }
     }
 
-    async function updatePetStats( flag) {                       // функция - обновление состояния питомца (здоровье и опыт) каждые 3 минуты
+
+
+    async function healPetBonus() {   // функция - лечение питомца бонусом при здоровье 0 и сытости 0
+        if (!tokenId) {
+            alert("Сначала выберите питомца.");
+            return;
+        }
+
+        try {
+            let value = ethers.parseEther(petHealPrice);
+            console.log("Sending bonus healt with value:", value);
+            const tx = await contract.revivePet(tokenId, { value: value });
+
+            await tx.wait();
+
+            petName = await contract.getName(tokenId);
+            [name, satiety, health, lastFed, lastHealthDecay, experience, age, status] = await getPetInfo(tokenId);
+
+
+            const flag = 3;
+
+            await updatePetStats(flag);
+
+
+        } catch (e) {
+            alert("Ошибка при бонусном лечении: " + e.message);
+            let errorMessage = "Ошибка при лечении питомца.";
+
+
+            const revertReason =
+                e?.error?.reason ||
+                e?.error?.revert?.args?.[0] ||
+                e?.reason ||
+                e?.revert?.args?.[0];
+
+
+
+
+
+            if (revertReason) {
+                if (revertReason.includes("Pet is already healthy")) {
+                    errorMessage = "⏳ Pet is already healthy!";
+                } else if (revertReason.includes("Pet is not active")) {
+                    errorMessage = "💀 Питомец мёртв или неактивен. Возродите его.";
+                } else {
+                    errorMessage = "⚠️ " + revertReason;
+                }
+            } else if (e?.message) {
+                errorMessage = "⚠️ " + e.message;
+            }
+
+
+            if (feedErrorEl) {
+                feedErrorEl.textContent = errorMessage;
+                feedErrorEl.classList.add("error-message");
+
+                setTimeout(() => {
+                    feedErrorEl.classList.add("hidden");
+                }, 5000);
+
+
+                feedErrorEl.classList.remove("hidden");
+            }
+        }
+    }
+
+    async function updatePetStats(flag) {                       // функция - обновление состояния питомца (здоровье и опыт) каждые 3 минуты
 
         if (!tokenId) return;
         console.log("updatePetStats begin");
         try {
             petName = await contract.getName(tokenId);
             [name, satiety, health, lastFed, lastHealthDecay, experience, age, petStatus] = await getPetInfo(tokenId);
-            //satiety = await contract.getSatiety(tokenId);
-           // health = await contract.getHealth(tokenId);
-          //  experience = await contract.getPetExperience(tokenId);
-         //   age = await contract.getAge(tokenId);
-         //   petStatus = await contract.getPetState(tokenId);
+            petStatus = await contract.getPetState(tokenId);
 
             let tokenURI = await contract.tokenURI(tokenId);
             let response = await fetch(tokenURI);
@@ -879,7 +946,9 @@
                 alert(`🐾Вы покормили питомца бонусом!\nЕда : ${satiety} \nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
             } else if(flag==2){
                 alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
-            }
+            }  else if (flag == 3) {
+            alert(`🐾 Питомец вылечен бонусом, теперь ор снова активныйй!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
+        }
           
             console.log(`Pet ${tokenId} - Age: ${age},!\nЕда : ${satiety},  Health: ${health}, Experience: ${experience}\nstatus: ${petStatus}`);
 
@@ -910,11 +979,11 @@
             
         
          
-            status = petStatus === 0n ? "Active" : "Dead";
+            status = petStatus === 0n ? "Active" : "Inactive";
             console.log(`🔁 Обновление данных ${name}:\nЕда : ${satiety} здоровье: ${health}, опыт: ${experience},status:${petStatus} `);
             console.log(petStatus === 0n ? "Active" : "Dead");
 
-            status = petStatus === 0n ? "Active" : "Dead";
+           
             console.log("updatePetStats update");
 
 
@@ -957,7 +1026,12 @@
             const currentSatiety = Math.max(0, baseSatiety - decay);
            // return currentSatiety;
          
-
+            if (currentSatiety == 0) {
+                status = await contract.getPetState(tokenId);
+                if (petStatusEl) {
+                    statusEl.textContent = ` ${status === 0n ? "Active" : "Inactive"}`;
+                } // обновляем статус)
+            }
             if (satietyEl) {
                 satietyEl.textContent = `${currentSatiety}%`;
                 if (lastFed) {
@@ -983,6 +1057,13 @@
             const healthLoss = decayUnits * HEALTH_DECAY_PERCENT;
 
             const currentHealth = Math.max(0, baseHealth - healthLoss);
+            if (currentHealth == 0) {
+                status = await contract.getPetState(tokenId);
+                if (petStatusEl)
+                {
+                    statusEl.textContent = ` ${status === 0n ? "Active" : "Inactive"}`;
+                } // обновляем статус)
+            }
 
             if (healthEl) {
                 healthEl.textContent = `${currentHealth}%`;
@@ -1047,57 +1128,9 @@
         }
     }
 
-    async function getPET_PRICE() {
-        await loadConfig();
-        await connect();
-        try {
-                if (!contract) {
-                    throw new Error("Контракт не инициализирован");
-                }
-
-            const price = await contract.getPET_PRICE();
-            console.log("price:", price);
-                return ethers.formatEther(price); 
-            } catch (err) {
-                console.error("Ошибка получения цены питомца:", err);
-                return "0";
-            }
-        
-    }
-
-    async function getBONUS_FEED_PRICE() {
-        await loadConfig();
-        await connect();
-        try {
-                if (!contract) {
-                    throw new Error("Контракт не инициализирован");
-                }
-
-            const price = await contract.getBONUS_FEED_PRICE();
-            console.log("price:", price);
-                return ethers.formatEther(price); 
-        } catch (e) {
-            alert("Ошибка при получении цены бонусного кормления: " + e.message);
-            return "0";
-        }
-    }
-    async function getHEAL_PRICE() {
-        await loadConfig();
-        await connect();
-        try {
-            if (!contract) {
-                throw new Error("Контракт не инициализирован");
-            }
-
-            const price = await contract.getHEAL_PRICE();
-            console.log("price:", price);
-            return ethers.formatEther(price);
-        } catch (err) {
-            console.error("Ошибка получения цены питомца:", err);
-            return "0";
-        }
-
-    }
+    
+ 
+ 
 
     async function getPet_Price() {
         await loadConfig();
@@ -1185,9 +1218,11 @@
             status = petStatus === 0n ? "Active" : "Dead";
             if(petStatus != 0n){
                 feedPetBtn.classList.add('non-display');
-                sellPetBtn.classList.add('non-display');
+                healPetBtn.classList.add('non-display');
                 feedPetBonusBtn.classList.add('non-display');
+                showSellPetBtn.classList.add('non-display');
                 burnPetBtn.classList.remove('non-display');
+                healPetBtnBonus.classList.remove('non-display');
             }
             
             console.log(`Pet ${tokenId} - Name: ${name},Еда:${satiety}, Age: ${age}, Health: ${health}, Experience: ${experience}, Status: ${petStatus}`);
