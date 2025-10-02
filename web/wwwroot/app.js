@@ -32,7 +32,7 @@
 
 
     const foodCarouselBtn = document.getElementById('food-carousel');  //кнопка открыть карусель с едой
-    const foodCarouselBtnBonus = document.getElementById('foodBonus-carousel');  //кнопка открыть карусель с bonus едой
+   
 
     const inputPetName = document.getElementById('inputPetName');
     const inputPetNameBye = document.getElementById('inputPetNameBye');
@@ -75,7 +75,7 @@
         showSellPetBtn.addEventListener('click', function (e) {
             e.preventDefault();
             petFormSellSection.classList.remove('non-display');
-            feedPetBtn.classList.add('non-display');
+            foodCarouselBtn.classList.add('non-display');
         });
     }
 
@@ -83,7 +83,7 @@
         closeSellPetBtn.addEventListener('click', function (e) {
             e.preventDefault();
             petFormSellSection.classList.add('non-display');
-            feedPetBtn.classList.remove('non-display');
+            foodCarouselBtn.classList.remove('non-display');
         });
     }
 
@@ -917,7 +917,7 @@
         try {
             petName = await contract.getName(tokenId);
             [name, satiety, health, lastFed, lastHealthDecay, experience, age, petStatus] = await getPetInfo(tokenId);
-            petStatus = await contract.getPetState(tokenId);
+            await isValidStatus();
 
             let tokenURI = await contract.tokenURI(tokenId);
             let response = await fetch(tokenURI);
@@ -1025,26 +1025,7 @@
            // return currentSatiety;
          
             if (currentSatiety == 0) {
-                petStatus = await contract.getPetState(tokenId);
-
-
-                status = petStatus === 0n ? "Active" : "Dead";
-                if (statusEl) {
-                    statusEl.textContent = ` ${status}`;
-              
-            }
-                if (petStatus != 0n) {
-                    feedPetBtn.classList.add('non-display');
-                    sellPetBtn.classList.add('non-display');
-                    feedPetBonusBtn.classList.add('non-display');
-                    burnPetBtn.classList.remove('non-display');
-                  
-                } else {
-                    feedPetBtn.classList.remove('non-display');
-                    sellPetBtn.classList.remove('non-display');
-                    feedPetBonusBtn.classList.remove('non-display');
-                    burnPetBtn.classList.add('non-display');
-                }
+                await isValidStatus();
 
   
             } // обновляем статус)
@@ -1077,25 +1058,7 @@
 
 
             if (currentHealth == 0) {
-                petStatus = await contract.getPetState(tokenId);
-
-
-                status = petStatus === 0n ? "Active" : "Dead";
-                if (statusEl) {
-                    statusEl.textContent = ` ${status}`;
-
-                }
-                if (petStatus != 0n) {
-                    feedPetBtn.classList.add('non-display');
-                    sellPetBtn.classList.add('non-display');
-                    feedPetBonusBtn.classList.add('non-display');
-                    burnPetBtn.classList.remove('non-display');
-                } else {
-                    feedPetBtn.classList.remove('non-display');
-                    sellPetBtn.classList.remove('non-display');
-                    feedPetBonusBtn.classList.remove('non-display');
-                    burnPetBtn.classList.add('non-display');
-                }
+                await isValidStatus();
 
             } // обновляем статус)
            
@@ -1232,7 +1195,40 @@
     }
 
 
+    async function isValidStatus() {
+        petStatus = await contract.getPetState(tokenId);
+        status = petStatus === 0 ? "Active" : "Inactive";
 
+        if (statusEl) {
+            statusEl.textContent = ` ${status}`;
+        }
+        if (petStatus != 0) {
+            foodCarouselBtn.classList.add('non-display');
+            foodType.classList.add('non-display');
+            feedPetBtn.classList.add('non-display');
+            healPetBtn.classList.add('non-display');
+            showSellPetBtn.classList.add('non-display');
+            feedPetBonusBtn.classList.add('non-display');
+            healPetBtnBonus.classList.remove('non-display');
+            burnPetBtn.classList.remove('non-display');
+        } else {
+            foodCarouselBtn.classList.remove('non-display');
+            foodType.classList.remove('non-display');
+            feedPetBtn.classList.remove('non-display');
+            healPetBtn.classList.remove('non-display');
+            showSellPetBtn.classList.remove('non-display');
+            feedPetBonusBtn.classList.remove('non-display');
+            healPetBtnBonus.classList.add('non-display');
+            burnPetBtn.classList.add('non-display');
+        }
+    }
+
+
+    //==============================================
+
+    //                 DAShBOARD 
+
+    //================================================
 
 
     const carousel = document.getElementById("carousel");
@@ -1246,15 +1242,26 @@
     const foodItems = []; // Массив с элементами еды
     const foodBonusItems = []; // Массив с элементами bonus еды
 
+    let currentItems = [];         // активный массив еды
+    let currentOnClick = () => { }; // активная функция кормления
+    let currentText = "";          // текст заголовка
 
-    // Функция отображения текущей тройки
-    function renderCarousel(foodItems, onClickHandler,text) {
+
+
+  
+    function renderCarousel(foodItems, onClickHandler, text) {
+        currentItems = foodItems;
+        currentOnClick = onClickHandler;
+        currentText = text;
 
         foodType.textContent = text;
-        carousel.innerHTML = ""; // Очистка
-        const prev = getWrappedIndex(currentIndex - 1);
+        carousel.innerHTML = "";
+
+        const totalItems = foodItems.length;
+
+        const prev = getWrappedIndex(currentIndex - 1, totalItems);
         const current = currentIndex;
-        const next = getWrappedIndex(currentIndex + 1);
+        const next = getWrappedIndex(currentIndex + 1, totalItems);
 
         const indices = [prev, current, next];
 
@@ -1263,12 +1270,13 @@
             if (i === current) {
                 img.classList.add("center");
                 img.addEventListener("click", () => {
-                    onClickHandler(i); // Вызываем переданную функцию
+                    onClickHandler(i);
                 });
             }
             carousel.appendChild(img);
         });
     }
+
 
     function getWrappedIndex(i) {
         return (i + totalItems) % totalItems;
@@ -1304,13 +1312,15 @@
         }
         
         prevBtn.addEventListener("click", () => {
-            currentIndex = getWrappedIndex(currentIndex - 1);
-            renderCarousel(foodItems, feedPet, "Покормите питомца едой:");
+            const total = currentItems.length;
+            currentIndex = getWrappedIndex(currentIndex - 1, total);
+            renderCarousel(currentItems, currentOnClick, currentText);
         });
 
         nextBtn.addEventListener("click", () => {
-            currentIndex = getWrappedIndex(currentIndex + 1);
-            renderCarousel(foodItems, feedPet, "Покормите питомца едой:");
+            const total = currentItems.length;
+            currentIndex = getWrappedIndex(currentIndex + 1, total);
+            renderCarousel(currentItems, currentOnClick, currentText);
         });
 
         renderCarousel(foodItems, feedPet,"Покормите питомца едой:");
@@ -1334,11 +1344,13 @@
 
         await loadConfig();
         await connect();
+       
 
         tokenId = getTokenIdFromURL();
         console.log("TokenId from URL:", tokenId);
         if (!tokenId) {
             console.error("tokenId не найден в URL");
+
             return;
         }
 
@@ -1347,17 +1359,8 @@
             [name, satiety, health, lastFed, lastHealthDecay, experience, age, status] = await getPetInfo(tokenId);
           
             
-            petStatus = await contract.getPetState(tokenId);
-            status = petStatus === 0n ? "Active" : "Inactive";
-            if(petStatus != 0n){
-                foodCarouselBtn.classList.add('non-display');
-                healPetBtn.classList.add('non-display');
-                feedPetBonusBtn.classList.add('non-display');
-                showSellPetBtn.classList.add('non-display');
-                burnPetBtn.classList.remove('non-display');
-                healPetBtnBonus.classList.remove('non-display');
-            }
             
+            await isValidStatus();
             console.log(`Pet ${tokenId} - Name: ${name},Еда:${satiety}, Age: ${age}, Health: ${health}, Experience: ${experience}, Status: ${petStatus}`);
 
 
@@ -1389,7 +1392,6 @@
             if (nameEl) nameEl.textContent = name;
             if (experienceEl) experienceEl.textContent = ` ${experience}`;
             if (ageEl) ageEl.textContent = ` ${age}`;
-            if (statusEl) statusEl.textContent = ` ${status}`;
 
             if (healthEl) {
                 healthEl.textContent = `${health}%`;
