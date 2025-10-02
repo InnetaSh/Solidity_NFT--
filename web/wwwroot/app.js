@@ -555,6 +555,7 @@
                     card.classList.add("pet-card");
                     card.dataset.tokenId = tokenId;
 
+                    food = metadata.attributes.find(attr => attr.trait_type === "Satiety")?.value ?? '—';
                     age = metadata.attributes.find(attr => attr.trait_type === "Age")?.value ?? '—';
                     health = metadata.attributes.find(attr => attr.trait_type === "Health")?.value ?? '—';
                     experience = metadata.attributes.find(attr => attr.trait_type === "Experience")?.value ?? '—';
@@ -571,7 +572,8 @@
                                 <div class="petInfo-container">
                                     <h2 class="big-text text-decoratoin">${metadata.name}</h2>
                                     <h3 class="medium-text">Age: <span class="small-text">${age}</span></h3>
-                                    <h3 class="medium-text">Health: <span class="small-text">${health}</span></h3>
+                                    <h3 class="medium-text">Food: <span class="small-text">${food}%</span></h3>
+                                    <h3 class="medium-text">Health: <span class="small-text">${health}%</span></h3>
                                     <h3 class="medium-text">Exp: <span class="small-text">${experience}</span></h3>
                                 </div>
                             </div>
