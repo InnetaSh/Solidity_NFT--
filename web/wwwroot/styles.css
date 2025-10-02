@@ -656,3 +656,55 @@ button:active {
         opacity: 0;
         pointer-events: none;
     }
+
+
+
+    /*============================
+        ANIMATIONS  BTN
+    =============================== */
+.carousel-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px auto;
+    max-width: 470px;
+}
+
+.carousel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    width: 450px; 
+    height: 150px;
+    position: relative;
+    gap:10px;
+}
+
+    .carousel img {
+        width: 80px;
+        height: 80px;
+        margin: 0 10px;
+        opacity: 0.6;
+        transition: transform 0.3s, opacity 0.3s;
+        cursor: pointer;
+        border-radius: 40px;
+        border: 2px solid transparent;
+    }
+
+        .carousel img.center {
+            transform: scale(1.5);
+            opacity: 1;
+            border-color: #4caf50;
+            z-index: 2;
+        }
+
+.carousel-btn {
+    background-color: transparent;
+    border: none;
+    border-radius: 30px;
+    font-size: 24px;
+    padding: 8px 12px;
+    margin: 0 10px;
+    cursor: pointer;
+}

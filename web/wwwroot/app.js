@@ -31,6 +31,9 @@
     const burnPetBtn = document.getElementById('burnPetBtn');  //кнопка сжечь мертвого питомца
 
 
+    const foodCarouselBtn = document.getElementById('food-carousel');  //кнопка открыть карусель с едой
+    const foodCarouselBtnBonus = document.getElementById('foodBonus-carousel');  //кнопка открыть карусель с bonus едой
+
     const inputPetName = document.getElementById('inputPetName');
     const inputPetNameBye = document.getElementById('inputPetNameBye');
     const petFormSellSection = document.getElementById('petFormSellSection');
@@ -56,13 +59,8 @@
         byePetBtn.addEventListener('click', byePet);
     }
      
-    if (feedPetBtn) {
-        feedPetBtn.addEventListener('click', feedPet);
-    }
-    if (feedPetBonusBtn) {
-        feedPetBonusBtn.addEventListener('click', feedPetBonus);
-    }
 
+  
     if (healPetBtn) {
         healPetBtn.addEventListener('click', healPet);
     }
@@ -1014,7 +1012,7 @@
     }
 
 
-    function calculateSatiety(lastFed, baseSatiety) {
+    async function calculateSatiety(lastFed, baseSatiety) {
         try {
             const now = Math.floor(Date.now() / 1000); // время сейчас в секундах
             const timePassed = now - Number(lastFed);
@@ -1027,11 +1025,30 @@
            // return currentSatiety;
          
             if (currentSatiety == 0) {
-                status = await contract.getPetState(tokenId);
-                if (petStatusEl) {
-                    statusEl.textContent = ` ${status === 0n ? "Active" : "Inactive"}`;
-                } // обновляем статус)
+                petStatus = await contract.getPetState(tokenId);
+
+
+                status = petStatus === 0n ? "Active" : "Dead";
+                if (statusEl) {
+                    statusEl.textContent = ` ${status}`;
+              
             }
+                if (petStatus != 0n) {
+                    feedPetBtn.classList.add('non-display');
+                    sellPetBtn.classList.add('non-display');
+                    feedPetBonusBtn.classList.add('non-display');
+                    burnPetBtn.classList.remove('non-display');
+                  
+                } else {
+                    feedPetBtn.classList.remove('non-display');
+                    sellPetBtn.classList.remove('non-display');
+                    feedPetBonusBtn.classList.remove('non-display');
+                    burnPetBtn.classList.add('non-display');
+                }
+
+  
+            } // обновляем статус)
+
             if (satietyEl) {
                 satietyEl.textContent = `${currentSatiety}%`;
                 if (lastFed) {
@@ -1048,7 +1065,7 @@
     }
 
 
-    function calculateHealth(lastHealthDecay, baseHealth) {
+    async function calculateHealth(lastHealthDecay, baseHealth) {
         try {
             const now = Math.floor(Date.now() / 1000); // текущие секунды
             const timePassed = now - Number(lastHealthDecay); // сколько прошло с момента последнего ухудшения здоровья
@@ -1057,13 +1074,31 @@
             const healthLoss = decayUnits * HEALTH_DECAY_PERCENT;
 
             const currentHealth = Math.max(0, baseHealth - healthLoss);
+
+
             if (currentHealth == 0) {
-                status = await contract.getPetState(tokenId);
-                if (petStatusEl)
-                {
-                    statusEl.textContent = ` ${status === 0n ? "Active" : "Inactive"}`;
-                } // обновляем статус)
-            }
+                petStatus = await contract.getPetState(tokenId);
+
+
+                status = petStatus === 0n ? "Active" : "Dead";
+                if (statusEl) {
+                    statusEl.textContent = ` ${status}`;
+
+                }
+                if (petStatus != 0n) {
+                    feedPetBtn.classList.add('non-display');
+                    sellPetBtn.classList.add('non-display');
+                    feedPetBonusBtn.classList.add('non-display');
+                    burnPetBtn.classList.remove('non-display');
+                } else {
+                    feedPetBtn.classList.remove('non-display');
+                    sellPetBtn.classList.remove('non-display');
+                    feedPetBonusBtn.classList.remove('non-display');
+                    burnPetBtn.classList.add('non-display');
+                }
+
+            } // обновляем статус)
+           
 
             if (healthEl) {
                 healthEl.textContent = `${currentHealth}%`;
@@ -1183,6 +1218,7 @@
     }
 
 
+  
 
     function goToShop() {
         // Устанавливаем флаг, чтобы предотвратить автоперенаправление
@@ -1195,9 +1231,106 @@
         return params.get("tokenId");
     }
 
+
+
+
+
+    const carousel = document.getElementById("carousel");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const foodType = document.getElementById("food-type");
+  
+
+    const totalItems = 15;
+    let currentIndex = 0;
+    const foodItems = []; // Массив с элементами еды
+    const foodBonusItems = []; // Массив с элементами bonus еды
+
+
+    // Функция отображения текущей тройки
+    function renderCarousel(foodItems, onClickHandler,text) {
+
+        foodType.textContent = text;
+        carousel.innerHTML = ""; // Очистка
+        const prev = getWrappedIndex(currentIndex - 1);
+        const current = currentIndex;
+        const next = getWrappedIndex(currentIndex + 1);
+
+        const indices = [prev, current, next];
+
+        indices.forEach((i) => {
+            const img = foodItems[i].cloneNode();
+            if (i === current) {
+                img.classList.add("center");
+                img.addEventListener("click", () => {
+                    onClickHandler(i); // Вызываем переданную функцию
+                });
+            }
+            carousel.appendChild(img);
+        });
+    }
+
+    function getWrappedIndex(i) {
+        return (i + totalItems) % totalItems;
+    }
+
+
+
+
+
+
+
     document.addEventListener("DOMContentLoaded", async () => {
         const path = window.location.pathname;
         if (!path.endsWith("dashboard.html")) return;
+      
+
+        //------- для карсели еды--------
+        for (let i = 1; i <= totalItems; i++) {
+            const img = document.createElement("img");
+            img.src = `img/food/food_${i}.jpg`;
+            img.alt = `Еда ${i}`;
+            img.dataset.foodId = i;
+            foodItems.push(img);
+        }
+
+
+        for (let i = 1; i <= totalItems; i++) {
+            const img = document.createElement("img");
+            img.src = `img/foodBonus/food_${i}.jpg`;
+            img.alt = `Еда ${i}`;
+            img.dataset.foodId = i;
+            foodBonusItems.push(img);
+        }
+        
+        prevBtn.addEventListener("click", () => {
+            currentIndex = getWrappedIndex(currentIndex - 1);
+            renderCarousel(foodItems, feedPet, "Покормите питомца едой:");
+        });
+
+        nextBtn.addEventListener("click", () => {
+            currentIndex = getWrappedIndex(currentIndex + 1);
+            renderCarousel(foodItems, feedPet, "Покормите питомца едой:");
+        });
+
+        renderCarousel(foodItems, feedPet,"Покормите питомца едой:");
+
+        if (feedPetBonusBtn) {
+            feedPetBonusBtn.addEventListener('click', () => {
+                renderCarousel(foodBonusItems, feedPetBonus, `Бонусная еда: ${petBonusFeedPrice}ETH`);
+            });
+        }
+        if (feedPetBtn) {
+            feedPetBtn.addEventListener('click', () => {
+                renderCarousel(foodItems, feedPet, "Покормите питомца едой:");
+            });
+        }
+        
+
+        //---------------------------------
+
+
+        
 
         await loadConfig();
         await connect();
@@ -1215,9 +1348,9 @@
           
             
             petStatus = await contract.getPetState(tokenId);
-            status = petStatus === 0n ? "Active" : "Dead";
+            status = petStatus === 0n ? "Active" : "Inactive";
             if(petStatus != 0n){
-                feedPetBtn.classList.add('non-display');
+                foodCarouselBtn.classList.add('non-display');
                 healPetBtn.classList.add('non-display');
                 feedPetBonusBtn.classList.add('non-display');
                 showSellPetBtn.classList.add('non-display');
@@ -1245,8 +1378,13 @@
             const response = await fetch(tokenURI);
             const metadata = await response.json();
             
-           
-          
+            let baseSatiety = Number(satiety);
+            let baseHealth = Number(health);
+
+            await calculateSatiety(lastFed, baseSatiety);
+            await calculateHealth(lastHealthDecay, baseHealth);
+
+
             if (healthEl) healthEl.textContent = ` ${health}%`;
             if (nameEl) nameEl.textContent = name;
             if (experienceEl) experienceEl.textContent = ` ${experience}`;
@@ -1274,27 +1412,15 @@
                 }
             }
 
-            let baseSatiety = Number(satiety);
-            let baseHealth = Number(health);
+           
 
-            calculateSatiety(lastFed, baseSatiety);
-            calculateHealth(lastHealthDecay, baseHealth);
+          
             setInterval(async () => {
                 try {
                     const satiety = await contract.getSatiety(tokenId);
                     const baseSatiety = Number(satiety);
-                    if (baseSatiety == 0) {
-                        status = await contract.getPetState();
-                        status = status === 0n ? "Active" : "Dead";
-                        if(petStatus != 0n){
-                            feedPetBtn.classList.add('non-display');
-                            sellPetBtn.classList.add('non-display');
-                            feedPetBonusBtn.classList.add('non-display');
-                            burnPetBtn.classList.remove('non-display');
-                            statusEl.textContent = ` ${status}`;    
-                        }
-                    }
-                    calculateSatiety(lastFed, baseSatiety);
+                    
+                    await calculateSatiety(lastFed, baseSatiety);
                 } catch (err) {
                     console.error("Ошибка при обновлении сытости:", err);
                 }
@@ -1304,7 +1430,7 @@
                 try {
                     const health = await contract.getHealth(tokenId);
                     const baseHealth = Number(health);
-                    calculateHealth(lastHealthDecay, baseHealth);
+                    await calculateHealth(lastHealthDecay, baseHealth);
                 } catch (err) {
                     console.error("Ошибка при обновлении здоровья:", err);
                 }
@@ -1441,7 +1567,7 @@
         await getPet_Const();
 
         if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${petPrice} ETH`;
-        if (feedPetBonusBtn) feedPetBonusBtn.title = `Бонусное кормление стоит ${petPrice} ETH`;
+        if (feedPetBonusBtn) feedPetBonusBtn.title = `Бонусное кормление стоит ${petBonusFeedPrice} ETH`;
       
     };
  

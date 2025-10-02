@@ -44,6 +44,7 @@
                     <h3 class="medium-text">📋 Статус: <span id="petStatus" class="small-text"></span></h3>
                 </div>
                 <div class="bonus-btn-container">
+                    <button id="feedPetBtn" class="shop-button"  title="Покормить питомца">🍗</button>
                     <button id="feedPetBonusBtn" class="shop-button">🎁</button>
                     <button id="healPetBtn" class="shop-button" title="Вылечить питомца">🌡️</button>
                     <button id="showSellPetBtn" class="shop-button" title="Продать питомца">💰</button>
@@ -51,12 +52,23 @@
                     <button id="burnPetBtn" class="shop-button non-display" title="Удалить питомца">🔥</button>
                 </div>
             </div>
-            <button id="feedPetBtn" class="button-big">Кормить питомца</button>
+            <!--<button id="feedPetBtn" class="button-big">Кормить питомца</button>-->
+            <div id="food-type" class="medium-text"></div>
+            <div class="carousel-container" id="food-carousel">
+                <button id="prevBtn" class="carousel-btn">&lt;</button>
+
+                <div class="carousel" id="carousel"></div>
+
+                <button id="nextBtn" class="carousel-btn">&gt;</button>
+            </div>
+
+           
+
             <div id="feedError"></div>
 
 
             <form id="petFormSellSection" class="petForm non-display">
-                <button type="button" class="close-btn"  id="closeSellPetBtn">✖</button>
+                <button type="button" class="close-btn" id="closeSellPetBtn">✖</button>
 
                 <label for="address" class="small-text">Адресс покупателя:</label>
                 <input class="inputSell" type="text" id="inputSellAddress" name="address" placeholder="введите адресс" required />
