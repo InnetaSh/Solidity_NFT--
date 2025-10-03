@@ -164,6 +164,15 @@ contract NFTPet is ERC721URIStorage, Ownable {
       
 
         uint currentSatiety = getSatiety(tokenId);
+
+        uint currentHealth = getHealth(tokenId);
+		 if ( currentHealth == 0 && currentSatiety == 0) {
+			pet.health = currentHealth;
+			pet.state = PetState.Inactive;
+			emit PetInactive(tokenId);
+			 return; 
+		}
+
        
         // Увеличиваем сытость на 10%, но не выше MAX
         pet.satiety = currentSatiety + 10 > MAX_SATIETY ? MAX_SATIETY : currentSatiety + 10;
@@ -194,7 +203,15 @@ contract NFTPet is ERC721URIStorage, Ownable {
         require(getSatiety(tokenId) < MAX_SATIETY, "Pet is already full");
         require(pet.state == PetState.Active, "Pet is not active");
 
-       uint  currentSatiety = getSatiety(tokenId);
+        uint  currentSatiety = getSatiety(tokenId);
+ 
+        uint currentHealth = getHealth(tokenId);
+         if ( currentHealth == 0 && currentSatiety == 0) {
+            pet.health = currentHealth;
+            pet.state = PetState.Inactive;
+            emit PetInactive(tokenId);
+             return; 
+        } 
 
         pet.satiety = currentSatiety + 20 > MAX_SATIETY ? MAX_SATIETY : currentSatiety + 20;
         pet.lastFed = block.timestamp;
@@ -227,7 +244,9 @@ contract NFTPet is ERC721URIStorage, Ownable {
 
       
         
-        if ( currentHealth == 0) {
+       uint  currentSatiety = getSatiety(tokenId);
+
+        if ( currentHealth == 0 && currentSatiety == 0) {
             pet.health = currentHealth;
             pet.state = PetState.Inactive;
             emit PetInactive(tokenId);

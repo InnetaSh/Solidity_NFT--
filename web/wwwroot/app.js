@@ -105,7 +105,7 @@
     let tokenIds = [];
     let tokenId;
 
-    let name, satiety, health, lastFed, lastHealthDecay, experience, age, status;
+    let name, satiety, health, lastFed, lastHealthDecay, experience, age, status, petStatus;
 
 
     let petPrice = "0";                                             // цена питомца !
@@ -645,7 +645,9 @@
             lastHealthDecay = petLastHealthDecay;
             experience = petExperience;
             age = petAge;
-            status = petStatus === 0 ? "Active" : "Inactive";
+         
+                const statusNum = Number(petStatus);
+                status = statusNum === 0 ? "Active" : "Inactive";
             return [name, satiety, health, lastFed, lastHealthDecay, experience, age, status];
         }
         catch (e) {
@@ -703,16 +705,20 @@
                 errorMessage = "⚠️ " + e.message;
             }
 
-            if (feedErrorEl) {
-                feedErrorEl.textContent = errorMessage;
-                feedErrorEl.classList.add("error-message");
+            if (foodType) {
+                const originalText = foodType.textContent;
+                console.log(originalText);
+                foodType.textContent = errorMessage;
+                foodType.classList.add("error-message");
 
                 setTimeout(() => {
-                    feedErrorEl.classList.add("hidden");
+                    foodType.classList.remove("error-message");
+                    foodType.textContent = originalText;
+                    foodType.textContent = errorMessage;
                 }, 5000);
 
                 
-                feedErrorEl.classList.remove("hidden");
+              
             }
         
         }
@@ -725,7 +731,8 @@
         }
 
         try {
-            let value = ethers.parseEther(petPrice);
+            let value = ethers.parseEther(petBonusFeedPrice);
+            console.log("petBonusFeedPrice:", petBonusFeedPrice);
             console.log("Sending bonus feed with value:", value);
             const tx = await contract.feedPetBonus(tokenId, { value: value });
 
@@ -920,6 +927,11 @@
             petName = await contract.getName(tokenId);
             [name, satiety, health, lastFed, lastHealthDecay, experience, age, petStatus] = await getPetInfo(tokenId);
             await isValidStatus();
+            let baseSatiety = Number(satiety);
+            let baseHealth = Number(health);
+
+            await calculateSatiety(lastFed, baseSatiety);
+            await calculateHealth(lastHealthDecay, baseHealth);
 
             let tokenURI = await contract.tokenURI(tokenId);
             let response = await fetch(tokenURI);
@@ -942,12 +954,12 @@
                 petImageEl.src = chosenImage;
                 petImageEl.alt = petName;
             }
-            if (flag == 1) {
-                alert(`🐾Вы покормили питомца бонусом!\nЕда : ${satiety} \nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
-            } else if(flag==2){
-                alert(`🐾 Питомец покормлен!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
+            if (flag == 2) {
+                alert(`🐾Вы покормили питомца бонусом!`);
+            } else if(flag==1){
+                alert(`🐾 Питомец покормлен!`);
             }  else if (flag == 3) {
-            alert(`🐾 Питомец вылечен бонусом, теперь ор снова активныйй!\nЗдоровье: ${health}\nОпыт: ${experience}\nstatus: ${status}`);
+            alert(`🐾 Питомец вылечен бонусом, теперь ор снова активныйй!`);
         }
           
             console.log(`Pet ${tokenId} - Age: ${age},!\nЕда : ${satiety},  Health: ${health}, Experience: ${experience}\nstatus: ${petStatus}`);
@@ -979,7 +991,8 @@
             
         
          
-            status = petStatus === 0n ? "Active" : "Inactive";
+            const statusNum = Number(petStatus);
+            status = statusNum === 0 ? "Active" : "Inactive";
             console.log(`🔁 Обновление данных ${name}:\nЕда : ${satiety} здоровье: ${health}, опыт: ${experience},status:${petStatus} `);
             console.log(petStatus === 0n ? "Active" : "Dead");
 
@@ -1094,7 +1107,7 @@
             }
 
             try {
-                const tx = await contract.sellPet(selectedTokenId, toAddress);
+                const tx = await contract.sellPet(selectedTokenId, toAddress, { value: price });
                 await tx.wait();
 
                 alert("Питомец успешно продан!");
@@ -1199,7 +1212,10 @@
 
     async function isValidStatus() {
         petStatus = await contract.getPetState(tokenId);
-        status = petStatus === 0 ? "Active" : "Inactive";
+        const statusNum = Number(petStatus);
+        status = statusNum === 0 ? "Active" : "Inactive";
+        console.log("isValidStatus start")
+        console.log("Pet status:", statusNum, status);
 
         if (statusEl) {
             statusEl.textContent = ` ${status}`;
@@ -1223,6 +1239,7 @@
             healPetBtnBonus.classList.add('non-display');
             burnPetBtn.classList.add('non-display');
         }
+        console.log("isValidStatus end")
     }
 
 
@@ -1510,7 +1527,7 @@
                 });
             }
 
-            
+            await getPet_Price();
             shopImages.forEach((url, index) => {
                 const card = document.createElement("div");
                 card.className = "image-card";
@@ -1568,6 +1585,8 @@
         await loadMyPets();
      
         await getPet_Price();
+        console.log("Pet Price:", petPrice);
+
         await getPet_Const();
 
         if (petPriceEl) petPriceEl.textContent = `Цена питомца: ${petPrice} ETH`;
