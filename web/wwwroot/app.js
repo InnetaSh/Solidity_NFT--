@@ -714,7 +714,6 @@
                 setTimeout(() => {
                     foodType.classList.remove("error-message");
                     foodType.textContent = originalText;
-                    foodType.textContent = errorMessage;
                 }, 5000);
 
                 
@@ -774,16 +773,16 @@
                 errorMessage = "⚠️ " + e.message;
             }
 
-            if (feedErrorEl) {
-                feedErrorEl.textContent = errorMessage;
-                feedErrorEl.classList.add("error-message");
+            if (foodType) {
+                const originalText = foodType.textContent;
+                console.log(originalText);
+                foodType.textContent = errorMessage;
+                foodType.classList.add("error-message");
 
                 setTimeout(() => {
-                    feedErrorEl.classList.add("hidden");
+                    foodType.classList.remove("error-message");
+                    foodType.textContent = originalText;
                 }, 5000);
-
-
-                feedErrorEl.classList.remove("hidden");
             }
         }
     }
@@ -812,7 +811,7 @@
 
 
         } catch (e) {
-            alert("Ошибка при лечении: " + e.message);
+           
             let errorMessage = "Ошибка при лечении питомца.";
 
 
@@ -839,16 +838,16 @@
             }
             
 
-            if (feedErrorEl) {
-                feedErrorEl.textContent = errorMessage;
-                feedErrorEl.classList.add("error-message");
+            if (foodType) {
+                const originalText = foodType.textContent;
+                console.log(originalText);
+                foodType.textContent = errorMessage;
+                foodType.classList.add("error-message");
 
                 setTimeout(() => {
-                    feedErrorEl.classList.add("hidden");
+                    foodType.classList.remove("error-message");
+                    foodType.textContent = originalText;
                 }, 5000);
-
-
-                feedErrorEl.classList.remove("hidden");
             }
         }
     }
@@ -905,16 +904,16 @@
             }
 
 
-            if (feedErrorEl) {
-                feedErrorEl.textContent = errorMessage;
-                feedErrorEl.classList.add("error-message");
+            if (foodType) {
+                const originalText = foodType.textContent;
+                console.log(originalText);
+                foodType.textContent = errorMessage;
+                foodType.classList.add("error-message");
 
                 setTimeout(() => {
-                    feedErrorEl.classList.add("hidden");
+                    foodType.classList.remove("error-message");
+                    foodType.textContent = originalText;
                 }, 5000);
-
-
-                feedErrorEl.classList.remove("hidden");
             }
         }
     }
@@ -1038,7 +1037,7 @@
 
             const currentSatiety = Math.max(0, baseSatiety - decay);
            // return currentSatiety;
-         
+         satiety = currentSatiety;
             if (currentSatiety == 0) {
                 await isValidStatus();
 
@@ -1070,7 +1069,7 @@
             const healthLoss = decayUnits * HEALTH_DECAY_PERCENT;
 
             const currentHealth = Math.max(0, baseHealth - healthLoss);
-
+            health = currentHealth;
 
             if (currentHealth == 0) {
                 await isValidStatus();
